@@ -282,6 +282,16 @@ static void nav_btn_cb(lv_event_t * e)
         return; /* Already on main dashboard */
     }
 
+    if(strcmp(name, "Monitor") == 0) {
+        if(wave_timer) {
+            lv_timer_delete(wave_timer);
+            wave_timer = NULL;
+        }
+        extern void create_ventilator_monitoring_screen(void);
+        create_ventilator_monitoring_screen();
+        return;
+    }
+
     if(wave_timer) {
         lv_timer_delete(wave_timer);
         wave_timer = NULL;
