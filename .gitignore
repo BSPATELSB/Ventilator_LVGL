@@ -1,0 +1,9 @@
+build/
+bin/
+tags
+*.swp
+*.swo
+.project
+.cproject
+.vscode/
+.idea/
