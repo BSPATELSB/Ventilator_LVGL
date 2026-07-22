@@ -716,21 +716,21 @@ void create_ventilator_main_screen(void)
 
     lv_obj_t * img_lungs = lv_image_create(lungs_vp);
     lv_image_set_src(img_lungs, lungs_path);
-    lv_image_set_scale(img_lungs, 64);
+    lv_image_set_scale(img_lungs, 256);
     lv_obj_center(img_lungs);
 
 
     lv_anim_t a;
-lv_anim_init(&a);
+    lv_anim_init(&a);
 
-lv_anim_set_var(&a, img_lungs);
-lv_anim_set_exec_cb(&a, breathing_anim_cb);
+    lv_anim_set_var(&a, img_lungs);
+    lv_anim_set_exec_cb(&a, breathing_anim_cb);
 
-// Scale from 64 -> 72 (inhale)
-lv_anim_set_values(&a, 64, 72);
+    // Scale from 256 -> 282 (inhale)
+    lv_anim_set_values(&a, 256, 282);
 
-// Duration of one inhale
-lv_anim_set_duration(&a, 1500);
+    // Duration of one inhale
+    lv_anim_set_duration(&a, 1500);
 
 // Exhale
 lv_anim_set_playback_duration(&a, 1500);
