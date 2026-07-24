@@ -19,6 +19,7 @@
 #define COLOR_ACCENT_GREEN      lv_color_hex(0x00E676)
 #define COLOR_ACCENT_YELLOW     lv_color_hex(0xFFD600)
 #define COLOR_ACCENT_RED        lv_color_hex(0xD50000)
+#define COLOR_ACCENT_PURPLE     lv_color_hex(0xA020F0)
 #define COLOR_TEXT_MAIN         lv_color_hex(0xFFFFFF)
 #define COLOR_TEXT_MUTED        lv_color_hex(0x7097BA)
 #define COLOR_BTN_NAV_BG        lv_color_hex(0x091D36)
@@ -46,107 +47,14 @@ static float wave_phase_counter = 0.0f;
 /* References to live parameter widgets */
 static lv_obj_t * lbl_clock = NULL;
 static lv_obj_t * lbl_val_ppeak = NULL;
-static lv_obj_t * lbl_val_peep = NULL;
-static lv_obj_t * lbl_val_mv = NULL;
-static lv_obj_t * lbl_val_rr = NULL;
-static lv_obj_t * lbl_val_tv = NULL;
-static lv_obj_t * lbl_val_fio2 = NULL;
+static lv_obj_t * lbl_val_pmean = NULL;
+static lv_obj_t * lbl_val_vt = NULL;
+
+static lv_obj_t * lbl_pf_ratio = NULL;
+static lv_obj_t * lbl_o2_delivery = NULL;
 
 /* Forward declarations for screen callbacks */
 static void nav_btn_cb(lv_event_t * e);
-
-/* Helper to Create a Small Vital Card */
-static lv_obj_t * create_vital_tile(lv_obj_t * parent, const char * title, const char * unit, const char * val_str, int width, int height, lv_obj_t ** out_label)
-{
-    lv_obj_t * tile = lv_obj_create(parent);
-    lv_obj_set_size(tile, width, height);
-    lv_obj_set_style_bg_color(tile, COLOR_CARD_BG, 0);
-    lv_obj_set_style_border_color(tile, COLOR_CARD_BORDER, 0);
-    lv_obj_set_style_border_width(tile, 1, 0);
-    lv_obj_set_style_radius(tile, 8, 0);
-    lv_obj_set_style_pad_all(tile, 6, 0);
-    lv_obj_set_flex_flow(tile, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(tile, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-
-    /* Header Container (Title + Unit) */
-    lv_obj_t * head_box = lv_obj_create(tile);
-    lv_obj_set_size(head_box, width - 16, 22);
-    lv_obj_set_style_bg_opa(head_box, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(head_box, 0, 0);
-    lv_obj_set_style_pad_all(head_box, 0, 0);
-
-    lv_obj_t * lbl_t = lv_label_create(head_box);
-    lv_label_set_text(lbl_t, title);
-    lv_obj_set_style_text_font(lbl_t, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_t, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_t, LV_ALIGN_LEFT_MID, 0, 0);
-
-    lv_obj_t * lbl_u = lv_label_create(head_box);
-    lv_label_set_text(lbl_u, unit);
-    lv_obj_set_style_text_font(lbl_u, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_u, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_u, LV_ALIGN_RIGHT_MID, 0, 0);
-
-    /* Big Value Text */
-    lv_obj_t * lbl_v = lv_label_create(tile);
-    lv_label_set_text(lbl_v, val_str);
-    lv_obj_set_style_text_font(lbl_v, &lv_font_montserrat_24, 0);
-    lv_obj_set_style_text_color(lbl_v, COLOR_TEXT_MAIN, 0);
-    lv_obj_set_style_pad_left(lbl_v, 4, 0);
-
-    if(out_label) {
-        *out_label = lbl_v;
-    }
-
-    return tile;
-}
-
-/* Helper to Create Quick Setting Box */
-static void create_quick_setting_box(lv_obj_t * parent, const char * title, const char * unit, const char * val_str, const char * range_str)
-{
-    lv_obj_t * box = lv_obj_create(parent);
-    lv_obj_set_size(box, 120, 125);
-    lv_obj_set_style_bg_color(box, COLOR_CARD_BG, 0);
-    lv_obj_set_style_border_color(box, COLOR_CARD_BORDER, 0);
-    lv_obj_set_style_border_width(box, 1, 0);
-    lv_obj_set_style_radius(box, 8, 0);
-    lv_obj_set_style_pad_all(box, 4, 0);
-    lv_obj_set_flex_flow(box, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(box, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-    /* Title + Unit */
-    lv_obj_t * lbl_t = lv_label_create(box);
-    lv_label_set_text_fmt(lbl_t, "%s\n#7097ba %s#", title, unit);
-    lv_label_set_recolor(lbl_t, true);
-    lv_obj_set_style_text_font(lbl_t, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_t, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_align(lbl_t, LV_TEXT_ALIGN_CENTER, 0);
-
-    /* Value + Up/Down Arrows Container */
-    lv_obj_t * val_cont = lv_obj_create(box);
-    lv_obj_set_size(val_cont, 110, 42);
-    lv_obj_set_style_bg_opa(val_cont, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(val_cont, 0, 0);
-    lv_obj_set_style_pad_all(val_cont, 0, 0);
-
-    lv_obj_t * lbl_v = lv_label_create(val_cont);
-    lv_label_set_text(lbl_v, val_str);
-    lv_obj_set_style_text_font(lbl_v, &lv_font_montserrat_22, 0);
-    lv_obj_set_style_text_color(lbl_v, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(lbl_v, LV_ALIGN_LEFT_MID, 4, 0);
-
-    lv_obj_t * lbl_arr = lv_label_create(val_cont);
-    lv_label_set_text(lbl_arr, "^\nv");
-    lv_obj_set_style_text_font(lbl_arr, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_arr, COLOR_ACCENT_BLUE, 0);
-    lv_obj_align(lbl_arr, LV_ALIGN_RIGHT_MID, -4, 0);
-
-    /* Range Subtext */
-    lv_obj_t * lbl_r = lv_label_create(box);
-    lv_label_set_text(lbl_r, range_str);
-    lv_obj_set_style_text_font(lbl_r, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_r, COLOR_TEXT_MUTED, 0);
-}
 
 /* Populate standard loop graph coordinates representing inspiration and expiration */
 static void populate_loops_data(void)
@@ -250,24 +158,17 @@ static void waveform_timer_cb(lv_timer_t * timer)
     /* Fluctuate parameters once per breath cycle */
     static float prev_t = 0.0f;
     static float live_ppeak = 32.0f;
-    static float live_peep = 5.0f;
-    static float live_mv = 6.8f;
-    static float live_rr = 16.0f;
-    static float live_tv = 420.0f;
-    static float live_fio2 = 40.0f;
+    static float live_pmean = 35.0f;
+    static float live_vt = 420.0f;
 
     if(t < prev_t || (lbl_val_ppeak && strcmp(lv_label_get_text(lbl_val_ppeak), "32") == 0)) {
         live_ppeak = 31.0f + (float)(rand() % 20) / 10.0f;
-        live_peep = 4.8f + (float)(rand() % 5) / 10.0f;
-        live_mv = 6.5f + (float)(rand() % 7) / 10.0f;
-        live_tv = 410.0f + (float)(rand() % 20);
+        live_pmean = 34.0f + (float)(rand() % 20) / 10.0f;
+        live_vt = 410.0f + (float)(rand() % 20);
 
-        if(lbl_val_ppeak) lv_label_set_text_fmt(lbl_val_ppeak, "%.1f", live_ppeak);
-        if(lbl_val_peep) lv_label_set_text_fmt(lbl_val_peep, "%.1f", live_peep);
-        if(lbl_val_mv) lv_label_set_text_fmt(lbl_val_mv, "%.1f", live_mv);
-        if(lbl_val_rr) lv_label_set_text_fmt(lbl_val_rr, "%.0f", live_rr);
-        if(lbl_val_tv) lv_label_set_text_fmt(lbl_val_tv, "%.0f", live_tv);
-        if(lbl_val_fio2) lv_label_set_text_fmt(lbl_val_fio2, "%.0f", live_fio2);
+        if(lbl_val_ppeak) lv_label_set_text_fmt(lbl_val_ppeak, "%.0f", live_ppeak);
+        if(lbl_val_pmean) lv_label_set_text_fmt(lbl_val_pmean, "%.0f", live_pmean);
+        if(lbl_val_vt) lv_label_set_text_fmt(lbl_val_vt, "%.0f", live_vt);
     }
 
     /* Update real-time clock label */
@@ -397,37 +298,18 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_align(set_icon, LV_ALIGN_RIGHT_MID, 0, 0);
 
     /* ==================================================================== */
-    /* 2. LEFT PANEL - PATIENT VITAL READOUTS                               */
-    /* ==================================================================== */
-    lv_obj_t * left_panel = lv_obj_create(scr);
-    lv_obj_set_size(left_panel, 150, 475);
-    lv_obj_set_pos(left_panel, 10, 60);
-    lv_obj_set_style_bg_opa(left_panel, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(left_panel, 0, 0);
-    lv_obj_set_style_pad_all(left_panel, 0, 0);
-    lv_obj_set_flex_flow(left_panel, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(left_panel, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-    create_vital_tile(left_panel, "Ppeak", "cmH2O", "32", 146, 72, &lbl_val_ppeak);
-    create_vital_tile(left_panel, "PEEP", "cmH2O", "5", 146, 72, &lbl_val_peep);
-    create_vital_tile(left_panel, "Vt", "mL", "420", 146, 72, &lbl_val_tv);
-    create_vital_tile(left_panel, "Minute Vol", "L/min", "6.8", 146, 72, &lbl_val_mv);
-    create_vital_tile(left_panel, "Resp Rate", "bpm", "16", 146, 72, &lbl_val_rr);
-    create_vital_tile(left_panel, "FiO2", "%", "40", 146, 72, &lbl_val_fio2);
-
-    /* ==================================================================== */
-    /* 3. CENTER GRAPHICS SECTION (Waveforms + Loops)                       */
+    /* 2. MAIN CENTER CONTAINER (Takes entire remaining left side space)    */
     /* ==================================================================== */
     lv_obj_t * center_cont = lv_obj_create(scr);
-    lv_obj_set_size(center_cont, 690, 675);
-    lv_obj_set_pos(center_cont, 170, 60);
+    lv_obj_set_size(center_cont, 1120, 675);
+    lv_obj_set_pos(center_cont, 10, 60);
     lv_obj_set_style_bg_opa(center_cont, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(center_cont, 0, 0);
     lv_obj_set_style_pad_all(center_cont, 0, 0);
 
-    /* Stacked Waveforms Panel (Top half: 690 x 240) */
+    /* Stacked Waveforms Panel (Top: 1120 x 370) */
     lv_obj_t * wave_cont = lv_obj_create(center_cont);
-    lv_obj_set_size(wave_cont, 690, 240);
+    lv_obj_set_size(wave_cont, 1120, 360);
     lv_obj_align(wave_cont, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_bg_color(wave_cont, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(wave_cont, COLOR_CARD_BORDER, 0);
@@ -435,21 +317,55 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_style_radius(wave_cont, 10, 0);
     lv_obj_set_style_pad_all(wave_cont, 4, 0);
 
-    /* Pressure Waveform */
+    /* 2A. Pressure Waveform Box */
     lv_obj_t * box_p = lv_obj_create(wave_cont);
-    lv_obj_set_size(box_p, 678, 76);
+    lv_obj_set_size(box_p, 1110, 112);
     lv_obj_align(box_p, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_bg_opa(box_p, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(box_p, 0, 0);
-    lv_obj_t * lbl_p = lv_label_create(box_p);
-    lv_label_set_text(lbl_p, "Pressure cmH2O");
-    lv_obj_set_style_text_font(lbl_p, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_p, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_p, LV_ALIGN_TOP_LEFT, 10, 0);
 
+    /* Left Info */
+    lv_obj_t * lbl_p_title = lv_label_create(box_p);
+    lv_label_set_text(lbl_p_title, "Pressure");
+    lv_obj_set_style_text_font(lbl_p_title, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(lbl_p_title, COLOR_ACCENT_PURPLE, 0);
+    lv_obj_align(lbl_p_title, LV_ALIGN_TOP_LEFT, 4, 6);
+
+    lv_obj_t * lbl_p_unit = lv_label_create(box_p);
+    lv_label_set_text(lbl_p_unit, "cmH2O");
+    lv_obj_set_style_text_font(lbl_p_unit, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_p_unit, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(lbl_p_unit, LV_ALIGN_TOP_LEFT, 4, 24);
+
+    /* Ticks Axis Labels */
+    lv_obj_t * tick_p_max = lv_label_create(box_p);
+    lv_label_set_text(tick_p_max, "60");
+    lv_obj_set_style_text_font(tick_p_max, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_p_max, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_p_max, LV_ALIGN_TOP_LEFT, 80, 8);
+
+    lv_obj_t * tick_p_mid = lv_label_create(box_p);
+    lv_label_set_text(tick_p_mid, "30");
+    lv_obj_set_style_text_font(tick_p_mid, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_p_mid, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_p_mid, LV_ALIGN_TOP_LEFT, 80, 42);
+
+    lv_obj_t * tick_p_base = lv_label_create(box_p);
+    lv_label_set_text(tick_p_base, "0");
+    lv_obj_set_style_text_font(tick_p_base, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_p_base, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_p_base, LV_ALIGN_TOP_LEFT, 85, 76);
+
+    lv_obj_t * tick_p_min = lv_label_create(box_p);
+    lv_label_set_text(tick_p_min, "-10");
+    lv_obj_set_style_text_font(tick_p_min, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_p_min, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_p_min, LV_ALIGN_TOP_LEFT, 76, 92);
+
+    /* Chart */
     chart_pressure = lv_chart_create(box_p);
-    lv_obj_set_size(chart_pressure, 620, 58);
-    lv_obj_align(chart_pressure, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    lv_obj_set_size(chart_pressure, 880, 92);
+    lv_obj_align(chart_pressure, LV_ALIGN_TOP_LEFT, 110, 8);
     lv_chart_set_type(chart_pressure, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(chart_pressure, 120);
     lv_chart_set_update_mode(chart_pressure, LV_CHART_UPDATE_MODE_SHIFT);
@@ -459,23 +375,64 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_style_line_opa(chart_pressure, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_line_width(chart_pressure, 3, LV_PART_ITEMS);
     lv_obj_set_style_size(chart_pressure, 0, 0, LV_PART_INDICATOR);
-    ser_pressure = lv_chart_add_series(chart_pressure, COLOR_ACCENT_BLUE, LV_CHART_AXIS_PRIMARY_Y);
+    ser_pressure = lv_chart_add_series(chart_pressure, COLOR_ACCENT_PURPLE, LV_CHART_AXIS_PRIMARY_Y);
 
-    /* Flow Waveform */
+    /* Right Readout */
+    lbl_val_ppeak = lv_label_create(box_p);
+    lv_label_set_text(lbl_val_ppeak, "32");
+    lv_obj_set_style_text_font(lbl_val_ppeak, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_color(lbl_val_ppeak, COLOR_ACCENT_PURPLE, 0);
+    lv_obj_align(lbl_val_ppeak, LV_ALIGN_TOP_RIGHT, -45, 12);
+
+    lv_obj_t * lbl_ppeak_sub = lv_label_create(box_p);
+    lv_label_set_text(lbl_ppeak_sub, "Ppeak");
+    lv_obj_set_style_text_font(lbl_ppeak_sub, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_ppeak_sub, COLOR_ACCENT_PURPLE, 0);
+    lv_obj_align(lbl_ppeak_sub, LV_ALIGN_TOP_RIGHT, -40, 46);
+
+    /* 2B. Flow Waveform Box */
     lv_obj_t * box_f = lv_obj_create(wave_cont);
-    lv_obj_set_size(box_f, 678, 76);
-    lv_obj_align(box_f, LV_ALIGN_TOP_MID, 0, 78);
+    lv_obj_set_size(box_f, 1110, 112);
+    lv_obj_align(box_f, LV_ALIGN_TOP_MID, 0, 118);
     lv_obj_set_style_bg_opa(box_f, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(box_f, 0, 0);
-    lv_obj_t * lbl_f = lv_label_create(box_f);
-    lv_label_set_text(lbl_f, "Flow L/min");
-    lv_obj_set_style_text_font(lbl_f, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_f, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_f, LV_ALIGN_TOP_LEFT, 10, 0);
 
+    /* Left Info */
+    lv_obj_t * lbl_f_title = lv_label_create(box_f);
+    lv_label_set_text(lbl_f_title, "Flow");
+    lv_obj_set_style_text_font(lbl_f_title, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(lbl_f_title, COLOR_ACCENT_GREEN, 0);
+    lv_obj_align(lbl_f_title, LV_ALIGN_TOP_LEFT, 4, 6);
+
+    lv_obj_t * lbl_f_unit = lv_label_create(box_f);
+    lv_label_set_text(lbl_f_unit, "L/min");
+    lv_obj_set_style_text_font(lbl_f_unit, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_f_unit, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(lbl_f_unit, LV_ALIGN_TOP_LEFT, 4, 24);
+
+    /* Ticks Axis Labels */
+    lv_obj_t * tick_f_max = lv_label_create(box_f);
+    lv_label_set_text(tick_f_max, "80");
+    lv_obj_set_style_text_font(tick_f_max, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_f_max, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_f_max, LV_ALIGN_TOP_LEFT, 80, 8);
+
+    lv_obj_t * tick_f_base = lv_label_create(box_f);
+    lv_label_set_text(tick_f_base, "0");
+    lv_obj_set_style_text_font(tick_f_base, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_f_base, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_f_base, LV_ALIGN_TOP_LEFT, 85, 48);
+
+    lv_obj_t * tick_f_min = lv_label_create(box_f);
+    lv_label_set_text(tick_f_min, "-80");
+    lv_obj_set_style_text_font(tick_f_min, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_f_min, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_f_min, LV_ALIGN_TOP_LEFT, 76, 88);
+
+    /* Chart */
     chart_flow = lv_chart_create(box_f);
-    lv_obj_set_size(chart_flow, 620, 58);
-    lv_obj_align(chart_flow, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    lv_obj_set_size(chart_flow, 880, 92);
+    lv_obj_align(chart_flow, LV_ALIGN_TOP_LEFT, 110, 8);
     lv_chart_set_type(chart_flow, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(chart_flow, 120);
     lv_chart_set_update_mode(chart_flow, LV_CHART_UPDATE_MODE_SHIFT);
@@ -487,21 +444,62 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_style_size(chart_flow, 0, 0, LV_PART_INDICATOR);
     ser_flow = lv_chart_add_series(chart_flow, COLOR_ACCENT_GREEN, LV_CHART_AXIS_PRIMARY_Y);
 
-    /* Volume Waveform */
+    /* Right Readout */
+    lbl_val_pmean = lv_label_create(box_f);
+    lv_label_set_text(lbl_val_pmean, "35");
+    lv_obj_set_style_text_font(lbl_val_pmean, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_color(lbl_val_pmean, COLOR_ACCENT_GREEN, 0);
+    lv_obj_align(lbl_val_pmean, LV_ALIGN_TOP_RIGHT, -45, 12);
+
+    lv_obj_t * lbl_pmean_sub = lv_label_create(box_f);
+    lv_label_set_text(lbl_pmean_sub, "Pmean");
+    lv_obj_set_style_text_font(lbl_pmean_sub, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_pmean_sub, COLOR_ACCENT_GREEN, 0);
+    lv_obj_align(lbl_pmean_sub, LV_ALIGN_TOP_RIGHT, -40, 46);
+
+    /* 2C. Volume Waveform Box */
     lv_obj_t * box_v = lv_obj_create(wave_cont);
-    lv_obj_set_size(box_v, 678, 76);
-    lv_obj_align(box_v, LV_ALIGN_TOP_MID, 0, 156);
+    lv_obj_set_size(box_v, 1110, 112);
+    lv_obj_align(box_v, LV_ALIGN_TOP_MID, 0, 236);
     lv_obj_set_style_bg_opa(box_v, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(box_v, 0, 0);
-    lv_obj_t * lbl_v_title = lv_label_create(box_v);
-    lv_label_set_text(lbl_v_title, "Volume mL");
-    lv_obj_set_style_text_font(lbl_v_title, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_v_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_v_title, LV_ALIGN_TOP_LEFT, 10, 0);
 
+    /* Left Info */
+    lv_obj_t * lbl_v_text = lv_label_create(box_v);
+    lv_label_set_text(lbl_v_text, "Volume");
+    lv_obj_set_style_text_font(lbl_v_text, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(lbl_v_text, COLOR_ACCENT_YELLOW, 0);
+    lv_obj_align(lbl_v_text, LV_ALIGN_TOP_LEFT, 4, 6);
+
+    lv_obj_t * lbl_v_unit = lv_label_create(box_v);
+    lv_label_set_text(lbl_v_unit, "mL");
+    lv_obj_set_style_text_font(lbl_v_unit, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_v_unit, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(lbl_v_unit, LV_ALIGN_TOP_LEFT, 4, 24);
+
+    /* Ticks Axis Labels */
+    lv_obj_t * tick_v_max = lv_label_create(box_v);
+    lv_label_set_text(tick_v_max, "800");
+    lv_obj_set_style_text_font(tick_v_max, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_v_max, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_v_max, LV_ALIGN_TOP_LEFT, 76, 8);
+
+    lv_obj_t * tick_v_mid = lv_label_create(box_v);
+    lv_label_set_text(tick_v_mid, "400");
+    lv_obj_set_style_text_font(tick_v_mid, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_v_mid, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_v_mid, LV_ALIGN_TOP_LEFT, 76, 48);
+
+    lv_obj_t * tick_v_base = lv_label_create(box_v);
+    lv_label_set_text(tick_v_base, "0");
+    lv_obj_set_style_text_font(tick_v_base, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(tick_v_base, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(tick_v_base, LV_ALIGN_TOP_LEFT, 85, 88);
+
+    /* Chart */
     chart_volume = lv_chart_create(box_v);
-    lv_obj_set_size(chart_volume, 620, 58);
-    lv_obj_align(chart_volume, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    lv_obj_set_size(chart_volume, 880, 92);
+    lv_obj_align(chart_volume, LV_ALIGN_TOP_LEFT, 110, 8);
     lv_chart_set_type(chart_volume, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(chart_volume, 120);
     lv_chart_set_update_mode(chart_volume, LV_CHART_UPDATE_MODE_SHIFT);
@@ -513,9 +511,24 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_style_size(chart_volume, 0, 0, LV_PART_INDICATOR);
     ser_volume = lv_chart_add_series(chart_volume, COLOR_ACCENT_YELLOW, LV_CHART_AXIS_PRIMARY_Y);
 
-    /* Loops Panel (Bottom half: 690 x 235) */
+    /* Right Readout */
+    lbl_val_vt = lv_label_create(box_v);
+    lv_label_set_text(lbl_val_vt, "420");
+    lv_obj_set_style_text_font(lbl_val_vt, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_color(lbl_val_vt, COLOR_ACCENT_YELLOW, 0);
+    lv_obj_align(lbl_val_vt, LV_ALIGN_TOP_RIGHT, -45, 12);
+
+    lv_obj_t * lbl_vt_sub = lv_label_create(box_v);
+    lv_label_set_text(lbl_vt_sub, "Vt");
+    lv_obj_set_style_text_font(lbl_vt_sub, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_vt_sub, COLOR_ACCENT_YELLOW, 0);
+    lv_obj_align(lbl_vt_sub, LV_ALIGN_TOP_RIGHT, -40, 46);
+
+    /* ==================================================================== */
+    /* 3. LOOPS SECTION (Bottom: PV Loop + FV Loop + Oxygenation)           */
+    /* ==================================================================== */
     lv_obj_t * loops_cont = lv_obj_create(center_cont);
-    lv_obj_set_size(loops_cont, 690, 235);
+    lv_obj_set_size(loops_cont, 1120, 300);
     lv_obj_align(loops_cont, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_style_bg_opa(loops_cont, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(loops_cont, 0, 0);
@@ -523,7 +536,7 @@ void create_ventilator_monitoring_screen(void)
 
     /* Loop Card 1: PRESSURE-VOLUME LOOP */
     lv_obj_t * card_pv = lv_obj_create(loops_cont);
-    lv_obj_set_size(card_pv, 245, 235);
+    lv_obj_set_size(card_pv, 430, 295);
     lv_obj_align(card_pv, LV_ALIGN_LEFT_MID, 0, 0);
     lv_obj_set_style_bg_color(card_pv, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(card_pv, COLOR_CARD_BORDER, 0);
@@ -535,25 +548,75 @@ void create_ventilator_monitoring_screen(void)
     lv_label_set_text(lbl_pv_title, "PRESSURE-VOLUME LOOP");
     lv_obj_set_style_text_font(lbl_pv_title, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(lbl_pv_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_pv_title, LV_ALIGN_TOP_LEFT, 6, 2);
+    lv_obj_align(lbl_pv_title, LV_ALIGN_TOP_LEFT, 10, 4);
 
+    lv_obj_t * lbl_pv_y = lv_label_create(card_pv);
+    lv_label_set_text(lbl_pv_y, "Pressure (cmH2O)");
+    lv_obj_set_style_text_font(lbl_pv_y, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_pv_y, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(lbl_pv_y, LV_ALIGN_TOP_LEFT, 10, 24);
+
+    /* Chart PV Loop */
     chart_pv_loop = lv_chart_create(card_pv);
-    lv_obj_set_size(chart_pv_loop, 220, 180);
-    lv_obj_align(chart_pv_loop, LV_ALIGN_BOTTOM_MID, 0, -4);
+    lv_obj_set_size(chart_pv_loop, 360, 220);
+    lv_obj_align(chart_pv_loop, LV_ALIGN_BOTTOM_MID, 15, -4);
     lv_chart_set_type(chart_pv_loop, LV_CHART_TYPE_SCATTER);
     lv_chart_set_point_count(chart_pv_loop, 60);
     lv_chart_set_range(chart_pv_loop, LV_CHART_AXIS_PRIMARY_X, 0, 1000);
     lv_chart_set_range(chart_pv_loop, LV_CHART_AXIS_PRIMARY_Y, -15, 60);
     lv_obj_set_style_bg_opa(chart_pv_loop, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(chart_pv_loop, 0, 0);
-    lv_obj_set_style_line_width(chart_pv_loop, 2, LV_PART_ITEMS);
+    lv_obj_set_style_line_width(chart_pv_loop, 3, LV_PART_ITEMS);
     lv_obj_set_style_size(chart_pv_loop, 0, 0, LV_PART_INDICATOR);
-    ser_pv_loop = lv_chart_add_series(chart_pv_loop, lv_color_hex(0xA020F0), LV_CHART_AXIS_PRIMARY_Y);
+    ser_pv_loop = lv_chart_add_series(chart_pv_loop, COLOR_ACCENT_PURPLE, LV_CHART_AXIS_PRIMARY_Y);
+
+    /* PV Axes Ticks */
+    lv_obj_t * pv_y_60 = lv_label_create(card_pv);
+    lv_label_set_text(pv_y_60, "60");
+    lv_obj_set_style_text_font(pv_y_60, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pv_y_60, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(pv_y_60, LV_ALIGN_BOTTOM_LEFT, 12, -220);
+
+    lv_obj_t * pv_y_0 = lv_label_create(card_pv);
+    lv_label_set_text(pv_y_0, "0");
+    lv_obj_set_style_text_font(pv_y_0, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pv_y_0, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(pv_y_0, LV_ALIGN_BOTTOM_LEFT, 18, -60);
+
+    lv_obj_t * pv_y_min15 = lv_label_create(card_pv);
+    lv_label_set_text(pv_y_min15, "-15");
+    lv_obj_set_style_text_font(pv_y_min15, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pv_y_min15, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(pv_y_min15, LV_ALIGN_BOTTOM_LEFT, 8, -12);
+
+    lv_obj_t * pv_x_0 = lv_label_create(card_pv);
+    lv_label_set_text(pv_x_0, "0");
+    lv_obj_set_style_text_font(pv_x_0, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pv_x_0, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(pv_x_0, LV_ALIGN_BOTTOM_LEFT, 45, 0);
+
+    lv_obj_t * pv_x_500 = lv_label_create(card_pv);
+    lv_label_set_text(pv_x_500, "500");
+    lv_obj_set_style_text_font(pv_x_500, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pv_x_500, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(pv_x_500, LV_ALIGN_BOTTOM_LEFT, 215, 0);
+
+    lv_obj_t * pv_x_1000 = lv_label_create(card_pv);
+    lv_label_set_text(pv_x_1000, "1000");
+    lv_obj_set_style_text_font(pv_x_1000, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pv_x_1000, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(pv_x_1000, LV_ALIGN_BOTTOM_RIGHT, -15, 0);
+
+    lv_obj_t * pv_x_title = lv_label_create(card_pv);
+    lv_label_set_text(pv_x_title, "Volume (mL)");
+    lv_obj_set_style_text_font(pv_x_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pv_x_title, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(pv_x_title, LV_ALIGN_BOTTOM_MID, 15, -12);
 
     /* Loop Card 2: FLOW-VOLUME LOOP */
     lv_obj_t * card_fv = lv_obj_create(loops_cont);
-    lv_obj_set_size(card_fv, 245, 235);
-    lv_obj_align(card_fv, LV_ALIGN_LEFT_MID, 255, 0);
+    lv_obj_set_size(card_fv, 430, 295);
+    lv_obj_align(card_fv, LV_ALIGN_LEFT_MID, 445, 0);
     lv_obj_set_style_bg_color(card_fv, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(card_fv, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(card_fv, 1, 0);
@@ -564,26 +627,76 @@ void create_ventilator_monitoring_screen(void)
     lv_label_set_text(lbl_fv_title, "FLOW-VOLUME LOOP");
     lv_obj_set_style_text_font(lbl_fv_title, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(lbl_fv_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_fv_title, LV_ALIGN_TOP_LEFT, 6, 2);
+    lv_obj_align(lbl_fv_title, LV_ALIGN_TOP_LEFT, 10, 4);
 
+    lv_obj_t * lbl_fv_y = lv_label_create(card_fv);
+    lv_label_set_text(lbl_fv_y, "Flow (L/min)");
+    lv_obj_set_style_text_font(lbl_fv_y, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_fv_y, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(lbl_fv_y, LV_ALIGN_TOP_LEFT, 10, 24);
+
+    /* Chart FV Loop */
     chart_fv_loop = lv_chart_create(card_fv);
-    lv_obj_set_size(chart_fv_loop, 220, 180);
-    lv_obj_align(chart_fv_loop, LV_ALIGN_BOTTOM_MID, 0, -4);
+    lv_obj_set_size(chart_fv_loop, 360, 220);
+    lv_obj_align(chart_fv_loop, LV_ALIGN_BOTTOM_MID, 15, -4);
     lv_chart_set_type(chart_fv_loop, LV_CHART_TYPE_SCATTER);
     lv_chart_set_point_count(chart_fv_loop, 60);
     lv_chart_set_range(chart_fv_loop, LV_CHART_AXIS_PRIMARY_X, 0, 1000);
     lv_chart_set_range(chart_fv_loop, LV_CHART_AXIS_PRIMARY_Y, -80, 80);
     lv_obj_set_style_bg_opa(chart_fv_loop, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(chart_fv_loop, 0, 0);
-    lv_obj_set_style_line_width(chart_fv_loop, 2, LV_PART_ITEMS);
+    lv_obj_set_style_line_width(chart_fv_loop, 3, LV_PART_ITEMS);
     lv_obj_set_style_size(chart_fv_loop, 0, 0, LV_PART_INDICATOR);
     ser_fv_loop = lv_chart_add_series(chart_fv_loop, COLOR_ACCENT_GREEN, LV_CHART_AXIS_PRIMARY_Y);
 
+    /* FV Axes Ticks */
+    lv_obj_t * fv_y_80 = lv_label_create(card_fv);
+    lv_label_set_text(fv_y_80, "80");
+    lv_obj_set_style_text_font(fv_y_80, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(fv_y_80, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(fv_y_80, LV_ALIGN_BOTTOM_LEFT, 12, -220);
+
+    lv_obj_t * fv_y_0 = lv_label_create(card_fv);
+    lv_label_set_text(fv_y_0, "0");
+    lv_obj_set_style_text_font(fv_y_0, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(fv_y_0, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(fv_y_0, LV_ALIGN_BOTTOM_LEFT, 18, -114);
+
+    lv_obj_t * fv_y_min80 = lv_label_create(card_fv);
+    lv_label_set_text(fv_y_min80, "-80");
+    lv_obj_set_style_text_font(fv_y_min80, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(fv_y_min80, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(fv_y_min80, LV_ALIGN_BOTTOM_LEFT, 8, -12);
+
+    lv_obj_t * fv_x_0 = lv_label_create(card_fv);
+    lv_label_set_text(fv_x_0, "0");
+    lv_obj_set_style_text_font(fv_x_0, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(fv_x_0, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(fv_x_0, LV_ALIGN_BOTTOM_LEFT, 45, 0);
+
+    lv_obj_t * fv_x_500 = lv_label_create(card_fv);
+    lv_label_set_text(fv_x_500, "500");
+    lv_obj_set_style_text_font(fv_x_500, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(fv_x_500, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(fv_x_500, LV_ALIGN_BOTTOM_LEFT, 215, 0);
+
+    lv_obj_t * fv_x_1000 = lv_label_create(card_fv);
+    lv_label_set_text(fv_x_1000, "1000");
+    lv_obj_set_style_text_font(fv_x_1000, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(fv_x_1000, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(fv_x_1000, LV_ALIGN_BOTTOM_RIGHT, -15, 0);
+
+    lv_obj_t * fv_x_title = lv_label_create(card_fv);
+    lv_label_set_text(fv_x_title, "Volume (mL)");
+    lv_obj_set_style_text_font(fv_x_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(fv_x_title, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(fv_x_title, LV_ALIGN_BOTTOM_MID, 15, -12);
+
     populate_loops_data();
 
-    /* Oxygenation Statistics Panel (690 - 510 = 180 x 235) */
+    /* Oxygenation Statistics Panel (230 x 295) */
     lv_obj_t * oxy_card = lv_obj_create(loops_cont);
-    lv_obj_set_size(oxy_card, 180, 235);
+    lv_obj_set_size(oxy_card, 230, 295);
     lv_obj_align(oxy_card, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_set_style_bg_color(oxy_card, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(oxy_card, COLOR_CARD_BORDER, 0);
@@ -595,231 +708,77 @@ void create_ventilator_monitoring_screen(void)
     lv_label_set_text(oxy_title, "OXYGENATION");
     lv_obj_set_style_text_font(oxy_title, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(oxy_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(oxy_title, LV_ALIGN_TOP_LEFT, 6, 2);
+    lv_obj_align(oxy_title, LV_ALIGN_TOP_LEFT, 10, 4);
 
     /* O2 Stats Grid */
     lv_obj_t * stats_lbl1 = lv_label_create(oxy_card);
     lv_label_set_text(stats_lbl1, "FiO2\n#7097ba %#");
     lv_label_set_recolor(stats_lbl1, true);
     lv_obj_set_style_text_font(stats_lbl1, &lv_font_montserrat_12, 0);
-    lv_obj_align(stats_lbl1, LV_ALIGN_TOP_LEFT, 6, 32);
+    lv_obj_align(stats_lbl1, LV_ALIGN_TOP_LEFT, 10, 45);
 
     lv_obj_t * stats_val1 = lv_label_create(oxy_card);
     lv_label_set_text(stats_val1, "40");
-    lv_obj_set_style_text_font(stats_val1, &lv_font_montserrat_24, 0);
+    lv_obj_set_style_text_font(stats_val1, &lv_font_montserrat_28, 0);
     lv_obj_set_style_text_color(stats_val1, lv_color_hex(0xFF80AB), 0);
-    lv_obj_align(stats_val1, LV_ALIGN_TOP_RIGHT, -12, 32);
+    lv_obj_align(stats_val1, LV_ALIGN_TOP_RIGHT, -60, 42);
 
+    /* Vertical Scale bar */
+    lv_obj_t * bar_container = lv_obj_create(oxy_card);
+    lv_obj_set_size(bar_container, 25, 75);
+    lv_obj_align(bar_container, LV_ALIGN_TOP_RIGHT, -12, 38);
+    lv_obj_set_style_bg_color(bar_container, lv_color_hex(0x061528), 0);
+    lv_obj_set_style_border_color(bar_container, COLOR_CARD_BORDER, 0);
+    lv_obj_set_style_border_width(bar_container, 1, 0);
+    lv_obj_set_style_radius(bar_container, 4, 0);
+
+    lv_obj_t * bar_fill = lv_obj_create(bar_container);
+    lv_obj_set_size(bar_fill, 23, 30);
+    lv_obj_align(bar_fill, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_style_bg_color(bar_fill, lv_color_hex(0xFF80AB), 0);
+    lv_obj_set_style_border_width(bar_fill, 0, 0);
+    lv_obj_set_style_radius(bar_fill, 2, 0);
+
+    lv_obj_t * bar_max = lv_label_create(oxy_card);
+    lv_label_set_text(bar_max, "100");
+    lv_obj_set_style_text_font(bar_max, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(bar_max, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(bar_max, LV_ALIGN_TOP_RIGHT, -42, 38);
+
+    lv_obj_t * bar_min = lv_label_create(oxy_card);
+    lv_label_set_text(bar_min, "21");
+    lv_obj_set_style_text_font(bar_min, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(bar_min, COLOR_TEXT_MUTED, 0);
+    lv_obj_align(bar_min, LV_ALIGN_TOP_RIGHT, -42, 102);
+
+    /* P/F Ratio */
     lv_obj_t * stats_lbl2 = lv_label_create(oxy_card);
     lv_label_set_text(stats_lbl2, "P/F Ratio\n#7097ba mmHg#");
     lv_label_set_recolor(stats_lbl2, true);
     lv_obj_set_style_text_font(stats_lbl2, &lv_font_montserrat_12, 0);
-    lv_obj_align(stats_lbl2, LV_ALIGN_TOP_LEFT, 6, 95);
+    lv_obj_align(stats_lbl2, LV_ALIGN_TOP_LEFT, 10, 135);
 
-    lv_obj_t * stats_val2 = lv_label_create(oxy_card);
-    lv_label_set_text(stats_val2, "265");
-    lv_obj_set_style_text_font(stats_val2, &lv_font_montserrat_24, 0);
-    lv_obj_set_style_text_color(stats_val2, COLOR_ACCENT_BLUE, 0);
-    lv_obj_align(stats_val2, LV_ALIGN_TOP_RIGHT, -12, 95);
+    lbl_pf_ratio = lv_label_create(oxy_card);
+    lv_label_set_text(lbl_pf_ratio, "265");
+    lv_obj_set_style_text_font(lbl_pf_ratio, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_color(lbl_pf_ratio, COLOR_ACCENT_BLUE, 0);
+    lv_obj_align(lbl_pf_ratio, LV_ALIGN_TOP_RIGHT, -20, 132);
 
+    /* O2 Delivery */
     lv_obj_t * stats_lbl3 = lv_label_create(oxy_card);
     lv_label_set_text(stats_lbl3, "O2 Delivery\n#7097ba mL/min#");
     lv_label_set_recolor(stats_lbl3, true);
     lv_obj_set_style_text_font(stats_lbl3, &lv_font_montserrat_12, 0);
-    lv_obj_align(stats_lbl3, LV_ALIGN_TOP_LEFT, 6, 158);
+    lv_obj_align(stats_lbl3, LV_ALIGN_TOP_LEFT, 10, 215);
 
-    lv_obj_t * stats_val3 = lv_label_create(oxy_card);
-    lv_label_set_text(stats_val3, "268");
-    lv_obj_set_style_text_font(stats_val3, &lv_font_montserrat_24, 0);
-    lv_obj_set_style_text_color(stats_val3, COLOR_ACCENT_GREEN, 0);
-    lv_obj_align(stats_val3, LV_ALIGN_TOP_RIGHT, -12, 158);
-
-    /* ==================================================================== */
-    /* 4. RIGHT SIDE PANEL (Vitals + Alarms List)                           */
-    /* ==================================================================== */
-    lv_obj_t * right_panel = lv_obj_create(scr);
-    lv_obj_set_size(right_panel, 270, 675);
-    lv_obj_set_pos(right_panel, 870, 60);
-    lv_obj_set_style_bg_opa(right_panel, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(right_panel, 0, 0);
-    lv_obj_set_style_pad_all(right_panel, 0, 0);
-
-    /* Card 1: Vitals Display Panel */
-    lv_obj_t * card_vitals = lv_obj_create(right_panel);
-    lv_obj_set_size(card_vitals, 270, 240);
-    lv_obj_align(card_vitals, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_bg_color(card_vitals, COLOR_CARD_BG, 0);
-    lv_obj_set_style_border_color(card_vitals, COLOR_CARD_BORDER, 0);
-    lv_obj_set_style_border_width(card_vitals, 1, 0);
-    lv_obj_set_style_radius(card_vitals, 10, 0);
-    lv_obj_set_style_pad_all(card_vitals, 8, 0);
-
-    lv_obj_t * vit_title = lv_label_create(card_vitals);
-    lv_label_set_text(vit_title, "VITALS");
-    lv_obj_set_style_text_font(vit_title, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(vit_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(vit_title, LV_ALIGN_TOP_LEFT, 6, 2);
-
-    /* 1. HR bpm */
-    lv_obj_t * vit_hr_lbl = lv_label_create(card_vitals);
-    lv_label_set_text(vit_hr_lbl, "HR\nbpm");
-    lv_obj_set_style_text_font(vit_hr_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(vit_hr_lbl, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(vit_hr_lbl, LV_ALIGN_TOP_LEFT, 10, 30);
-
-    lv_obj_t * vit_hr_val = lv_label_create(card_vitals);
-    lv_label_set_text(vit_hr_val, "78");
-    lv_obj_set_style_text_font(vit_hr_val, &lv_font_montserrat_28, 0);
-    lv_obj_set_style_text_color(vit_hr_val, COLOR_ACCENT_GREEN, 0);
-    lv_obj_align(vit_hr_val, LV_ALIGN_TOP_RIGHT, -15, 24);
-
-    /* 2. SpO2 % */
-    lv_obj_t * vit_spo2_lbl = lv_label_create(card_vitals);
-    lv_label_set_text(vit_spo2_lbl, "SpO2\n%");
-    lv_obj_set_style_text_font(vit_spo2_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(vit_spo2_lbl, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(vit_spo2_lbl, LV_ALIGN_TOP_LEFT, 10, 82);
-
-    lv_obj_t * vit_spo2_val = lv_label_create(card_vitals);
-    lv_label_set_text(vit_spo2_val, "98");
-    lv_obj_set_style_text_font(vit_spo2_val, &lv_font_montserrat_28, 0);
-    lv_obj_set_style_text_color(vit_spo2_val, COLOR_ACCENT_BLUE, 0);
-    lv_obj_align(vit_spo2_val, LV_ALIGN_TOP_RIGHT, -15, 76);
-
-    /* 3. NIBP mmHg */
-    lv_obj_t * vit_nibp_lbl = lv_label_create(card_vitals);
-    lv_label_set_text(vit_nibp_lbl, "NIBP\nmmHg");
-    lv_obj_set_style_text_font(vit_nibp_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(vit_nibp_lbl, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(vit_nibp_lbl, LV_ALIGN_TOP_LEFT, 10, 134);
-
-    lv_obj_t * vit_nibp_val = lv_label_create(card_vitals);
-    lv_label_set_text(vit_nibp_val, "120 / 80\n#7097ba (93)#");
-    lv_label_set_recolor(vit_nibp_val, true);
-    lv_obj_set_style_text_font(vit_nibp_val, &lv_font_montserrat_18, 0);
-    lv_obj_set_style_text_color(vit_nibp_val, lv_color_hex(0xFF80AB), 0);
-    lv_obj_align(vit_nibp_val, LV_ALIGN_TOP_RIGHT, -15, 128);
-
-    /* 4. TEMP °C */
-    lv_obj_t * vit_temp_lbl = lv_label_create(card_vitals);
-    lv_label_set_text(vit_temp_lbl, "TEMP\n°C");
-    lv_obj_set_style_text_font(vit_temp_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(vit_temp_lbl, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(vit_temp_lbl, LV_ALIGN_TOP_LEFT, 10, 186);
-
-    lv_obj_t * vit_temp_val = lv_label_create(card_vitals);
-    lv_label_set_text(vit_temp_val, "36.6");
-    lv_obj_set_style_text_font(vit_temp_val, &lv_font_montserrat_28, 0);
-    lv_obj_set_style_text_color(vit_temp_val, lv_color_hex(0xB388FF), 0);
-    lv_obj_align(vit_temp_val, LV_ALIGN_TOP_RIGHT, -15, 180);
-
-    /* Card 2: Alarms Panel */
-    lv_obj_t * card_alarms = lv_obj_create(right_panel);
-    lv_obj_set_size(card_alarms, 270, 235);
-    lv_obj_align(card_alarms, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_bg_color(card_alarms, COLOR_CARD_BG, 0);
-    lv_obj_set_style_border_color(card_alarms, COLOR_CARD_BORDER, 0);
-    lv_obj_set_style_border_width(card_alarms, 1, 0);
-    lv_obj_set_style_radius(card_alarms, 10, 0);
-    lv_obj_set_style_pad_all(card_alarms, 8, 0);
-
-    lv_obj_t * al_title = lv_label_create(card_alarms);
-    lv_label_set_text(al_title, "ALARMS");
-    lv_obj_set_style_text_font(al_title, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(al_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(al_title, LV_ALIGN_TOP_LEFT, 6, 2);
-
-    /* Alarm List Rows */
-    lv_obj_t * row1 = lv_label_create(card_alarms);
-    lv_label_set_text(row1, LV_SYMBOL_BELL "  HIGH PRESSURE\n#d50000 Ppeak above limit#");
-    lv_label_set_recolor(row1, true);
-    lv_obj_set_style_text_font(row1, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(row1, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(row1, LV_ALIGN_TOP_LEFT, 6, 30);
-
-    lv_obj_t * row1_t = lv_label_create(card_alarms);
-    lv_label_set_text(row1_t, "10:24");
-    lv_obj_set_style_text_font(row1_t, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(row1_t, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(row1_t, LV_ALIGN_TOP_RIGHT, -6, 30);
-
-    lv_obj_t * row2 = lv_label_create(card_alarms);
-    lv_label_set_text(row2, LV_SYMBOL_WARNING "  LOW MINUTE VOLUME\n#ffd600 MV below limit#");
-    lv_label_set_recolor(row2, true);
-    lv_obj_set_style_text_font(row2, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(row2, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(row2, LV_ALIGN_TOP_LEFT, 6, 82);
-
-    lv_obj_t * row2_t = lv_label_create(card_alarms);
-    lv_label_set_text(row2_t, "10:20");
-    lv_obj_set_style_text_font(row2_t, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(row2_t, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(row2_t, LV_ALIGN_TOP_RIGHT, -6, 82);
-
-    lv_obj_t * row3 = lv_label_create(card_alarms);
-    lv_label_set_text(row3, LV_SYMBOL_WARNING "  DISCONNECTION\n#ffd600 Check patient circuit#");
-    lv_label_set_recolor(row3, true);
-    lv_obj_set_style_text_font(row3, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(row3, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(row3, LV_ALIGN_TOP_LEFT, 6, 134);
-
-    lv_obj_t * row3_t = lv_label_create(card_alarms);
-    lv_label_set_text(row3_t, "10:18");
-    lv_obj_set_style_text_font(row3_t, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(row3_t, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(row3_t, LV_ALIGN_TOP_RIGHT, -6, 134);
-
-    /* Alarm History Button */
-    lv_obj_t * btn_al_hist = lv_button_create(card_alarms);
-    lv_obj_set_size(btn_al_hist, 238, 40);
-    lv_obj_align(btn_al_hist, LV_ALIGN_BOTTOM_MID, 0, -6);
-    lv_obj_set_style_bg_color(btn_al_hist, COLOR_BTN_NAV_BG, 0);
-    lv_obj_set_style_border_color(btn_al_hist, COLOR_CARD_BORDER, 0);
-    lv_obj_set_style_border_width(btn_al_hist, 1, 0);
-    lv_obj_set_style_radius(btn_al_hist, 8, 0);
-
-    lv_obj_t * btn_al_hist_lbl = lv_label_create(btn_al_hist);
-    lv_label_set_text(btn_al_hist_lbl, "ALARM HISTORY");
-    lv_obj_set_style_text_font(btn_al_hist_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(btn_al_hist_lbl, COLOR_TEXT_MAIN, 0);
-    lv_obj_center(btn_al_hist_lbl);
+    lbl_o2_delivery = lv_label_create(oxy_card);
+    lv_label_set_text(lbl_o2_delivery, "268");
+    lv_obj_set_style_text_font(lbl_o2_delivery, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_color(lbl_o2_delivery, COLOR_ACCENT_GREEN, 0);
+    lv_obj_align(lbl_o2_delivery, LV_ALIGN_TOP_RIGHT, -20, 212);
 
     /* ==================================================================== */
-    /* 5. QUICK SETTINGS CONTROLS BAR                                       */
-    /* ==================================================================== */
-    lv_obj_t * quick_cont = lv_obj_create(scr);
-    lv_obj_set_size(quick_cont, 850, 185);
-    lv_obj_set_pos(quick_cont, 10, 545);
-    lv_obj_set_style_bg_color(quick_cont, COLOR_CARD_BG, 0);
-    lv_obj_set_style_border_color(quick_cont, COLOR_CARD_BORDER, 0);
-    lv_obj_set_style_border_width(quick_cont, 1, 0);
-    lv_obj_set_style_radius(quick_cont, 10, 0);
-    lv_obj_set_style_pad_all(quick_cont, 8, 0);
-
-    lv_obj_t * q_title = lv_label_create(quick_cont);
-    lv_label_set_text(q_title, "QUICK SETTINGS");
-    lv_obj_set_style_text_font(q_title, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(q_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(q_title, LV_ALIGN_TOP_LEFT, 6, 2);
-
-    lv_obj_t * q_boxes = lv_obj_create(quick_cont);
-    lv_obj_set_size(q_boxes, 830, 140);
-    lv_obj_align(q_boxes, LV_ALIGN_TOP_MID, 0, 24);
-    lv_obj_set_style_bg_opa(q_boxes, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(q_boxes, 0, 0);
-    lv_obj_set_style_pad_all(q_boxes, 0, 0);
-    lv_obj_set_flex_flow(q_boxes, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(q_boxes, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-    create_quick_setting_box(q_boxes, "FiO2", "%", "40", "21 - 100");
-    create_quick_setting_box(q_boxes, "Tidal Volume", "mL", "420", "100 - 1000");
-    create_quick_setting_box(q_boxes, "Respiratory Rate", "bpm", "16", "4 - 40");
-    create_quick_setting_box(q_boxes, "PEEP", "cmH2O", "5", "0 - 20");
-    create_quick_setting_box(q_boxes, "Insp. Time", "sec", "1.00", "0.20 - 3.00");
-    create_quick_setting_box(q_boxes, "Flow", "L/min", "60", "20 - 100");
-
-    /* ==================================================================== */
-    /* 6. RIGHT SIDEBAR NAVIGATION MENU                                    */
+    /* 4. RIGHT SIDEBAR NAVIGATION MENU                                    */
     /* ==================================================================== */
     lv_obj_t * nav_bar = lv_obj_create(scr);
     lv_obj_set_size(nav_bar, 130, 675);
@@ -866,7 +825,7 @@ void create_ventilator_monitoring_screen(void)
     }
 
     /* ==================================================================== */
-    /* 7. BOTTOM ACTION CONTROL BAR                                         */
+    /* 5. BOTTOM ACTION CONTROL BAR                                         */
     /* ==================================================================== */
     lv_obj_t * bot_bar = lv_obj_create(scr);
     lv_obj_set_size(bot_bar, 1260, 55);
