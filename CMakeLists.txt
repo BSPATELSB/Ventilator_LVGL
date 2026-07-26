@@ -406,22 +406,22 @@ target_include_directories(lvgl_linux PUBLIC
 # Link LVGL with external dependencies - Modern CMake/CMP0079 allows this
 target_link_libraries(lvgl PUBLIC ${PKG_CONFIG_LIB} m pthread rt dl)
 
-add_executable(lvglsim src/main.c src/ventilator_ui.c src/ventilator_main_screen.c src/ventilator_monitoring_screen.c src/ventilator_settings_screen.c src/usb_detect.c)
+add_executable(ventilator_app src/main.c src/ventilator_ui.c src/ventilator_main_screen.c src/ventilator_monitoring_screen.c src/ventilator_settings_screen.c src/usb_detect.c)
 
 # Repeat lvgl_linux to resolve circular dependency with lvgl
-target_link_libraries(lvglsim lvgl_linux lvgl lvgl_linux)
+target_link_libraries(ventilator_app lvgl_linux lvgl lvgl_linux)
 
 if(TARGET lvgl_demos)
-    target_link_libraries(lvglsim lvgl_demos)
+    target_link_libraries(ventilator_app lvgl_demos)
 endif()
 
 if(TARGET lvgl_examples)
-    target_link_libraries(lvglsim lvgl_examples)
+    target_link_libraries(ventilator_app lvgl_examples)
 endif()
 
 
 if(WERROR)
-    target_compile_options(lvglsim PRIVATE -Werror)
+    target_compile_options(ventilator_app PRIVATE -Werror)
     target_compile_options(lvgl PRIVATE -Werror)
     target_compile_options(lvgl_linux PRIVATE -Werror)
 endif()
@@ -439,4 +439,4 @@ install(TARGETS lvgl_linux
     ARCHIVE DESTINATION lib
 )
 
-add_custom_target(run COMMAND ${EXECUTABLE_OUTPUT_PATH}/lvglsim DEPENDS lvglsim)
+add_custom_target(run COMMAND ${EXECUTABLE_OUTPUT_PATH}/ventilator_app DEPENDS ventilator_app)
