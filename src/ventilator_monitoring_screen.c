@@ -55,6 +55,7 @@ static lv_obj_t * lbl_o2_delivery = NULL;
 
 /* Forward declarations for screen callbacks */
 static void nav_btn_cb(lv_event_t * e);
+static void goto_settings_cb(lv_event_t * e);
 
 /* Populate standard loop graph coordinates representing inspiration and expiration */
 static void populate_loops_data(void)
@@ -296,6 +297,8 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_style_text_font(set_icon, &lv_font_montserrat_20, 0);
     lv_obj_set_style_text_color(set_icon, COLOR_TEXT_MUTED, 0);
     lv_obj_align(set_icon, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_add_flag(set_icon, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(set_icon, goto_settings_cb, LV_EVENT_CLICKED, NULL);
 
     /* ==================================================================== */
     /* 2. MAIN CENTER CONTAINER (Takes entire remaining left side space)    */
@@ -898,6 +901,17 @@ void create_ventilator_monitoring_screen(void)
     lv_screen_load_anim(scr, LV_SCREEN_LOAD_ANIM_NONE, 0, 0, true);
 }
 
+static void goto_settings_cb(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    if(wave_timer) {
+        lv_timer_delete(wave_timer);
+        wave_timer = NULL;
+    }
+    extern void create_ventilator_settings_screen(void);
+    create_ventilator_settings_screen();
+}
+
 static void nav_btn_cb(lv_event_t * e)
 {
     const char * name = (const char *)lv_event_get_user_data(e);
@@ -910,6 +924,16 @@ static void nav_btn_cb(lv_event_t * e)
         }
         extern void create_ventilator_main_screen(void);
         create_ventilator_main_screen();
+        return;
+    }
+
+    if(strcmp(name, "More") == 0) {
+        if(wave_timer) {
+            lv_timer_delete(wave_timer);
+            wave_timer = NULL;
+        }
+        extern void create_ventilator_settings_screen(void);
+        create_ventilator_settings_screen();
         return;
     }
 }

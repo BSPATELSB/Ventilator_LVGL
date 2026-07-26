@@ -272,6 +272,17 @@ static void create_quick_setting_box(lv_obj_t * parent, const char * title, cons
     lv_obj_set_style_text_color(lbl_r, COLOR_TEXT_MUTED, 0);
 }
 
+static void goto_settings_cb(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    if(wave_timer) {
+        lv_timer_delete(wave_timer);
+        wave_timer = NULL;
+    }
+    extern void create_ventilator_settings_screen(void);
+    create_ventilator_settings_screen();
+}
+
 /* Navigation Callback for Sidebar Buttons (Fading Screen Transition) */
 static void nav_btn_cb(lv_event_t * e)
 {
@@ -289,6 +300,16 @@ static void nav_btn_cb(lv_event_t * e)
         }
         extern void create_ventilator_monitoring_screen(void);
         create_ventilator_monitoring_screen();
+        return;
+    }
+
+    if(strcmp(name, "More") == 0) {
+        if(wave_timer) {
+            lv_timer_delete(wave_timer);
+            wave_timer = NULL;
+        }
+        extern void create_ventilator_settings_screen(void);
+        create_ventilator_settings_screen();
         return;
     }
 
@@ -479,6 +500,8 @@ void create_ventilator_main_screen(void)
     lv_obj_set_style_text_font(set_icon, &lv_font_montserrat_20, 0);
     lv_obj_set_style_text_color(set_icon, COLOR_TEXT_MUTED, 0);
     lv_obj_align(set_icon, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_add_flag(set_icon, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(set_icon, goto_settings_cb, LV_EVENT_CLICKED, NULL);
 
     /* ==================================================================== */
     /* 2. LEFT PANEL - PATIENT VITAL READOUTS (300 x 675)                    */
