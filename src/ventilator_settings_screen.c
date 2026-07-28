@@ -62,6 +62,14 @@ static void setting_card_cb(lv_event_t * e)
         extern void create_ventilator_diagnostics_screen(void);
         create_ventilator_diagnostics_screen();
     }
+    else if(strcmp(title, "Calibration") == 0) {
+        if(clock_timer) {
+            lv_timer_delete(clock_timer);
+            clock_timer = NULL;
+        }
+        extern void create_ventilator_calibration_screen(void);
+        create_ventilator_calibration_screen();
+    }
 }
 
 /* Recursive helper to disable scrolling on all objects */
