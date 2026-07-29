@@ -412,6 +412,25 @@ static void back_to_home_cb(lv_event_t * e)
     create_ventilator_main_screen();
 }
 
+static void pat_badge_click_cb(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    if (clock_timer) {
+        lv_timer_delete(clock_timer);
+        clock_timer = NULL;
+    }
+    if (simulation_timer) {
+        lv_timer_delete(simulation_timer);
+        simulation_timer = NULL;
+    }
+    if (cal_seq_timer) {
+        lv_timer_delete(cal_seq_timer);
+        cal_seq_timer = NULL;
+    }
+    extern void create_ventilator_patient_screen(void);
+    create_ventilator_patient_screen();
+}
+
 /* Helper to render Sidebar buttons */
 static lv_obj_t * create_sidebar_btn(lv_obj_t * parent, int y_pos, const char * symbol, const char * text, bool is_active)
 {
@@ -673,6 +692,8 @@ void create_ventilator_calibration_screen(void)
     lv_obj_set_style_bg_color(pat_box, lv_color_hex(0x0B223D), 0);
     lv_obj_set_style_border_width(pat_box, 0, 0);
     lv_obj_set_style_radius(pat_box, 6, 0);
+    lv_obj_add_flag(pat_box, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(pat_box, pat_badge_click_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t * pat_lbl = lv_label_create(pat_box);
     lv_label_set_text(pat_lbl, LV_SYMBOL_DIRECTORY " John Doe\n#7097ba ID: 12345678 | Male | 45 yrs | 70 kg#");

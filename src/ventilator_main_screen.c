@@ -52,6 +52,7 @@ static lv_obj_t * lbl_clock = NULL;
 /* Forward declarations for screen callbacks */
 static void back_to_main_cb(lv_event_t * e);
 static void nav_btn_cb(lv_event_t * e);
+static void pat_badge_click_cb(lv_event_t * e);
 
 static void breathing_anim_cb(void * obj, int32_t scale)
 {
@@ -283,6 +284,17 @@ static void goto_settings_cb(lv_event_t * e)
     create_ventilator_settings_screen();
 }
 
+static void pat_badge_click_cb(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    if(wave_timer) {
+        lv_timer_delete(wave_timer);
+        wave_timer = NULL;
+    }
+    extern void create_ventilator_patient_screen(void);
+    create_ventilator_patient_screen();
+}
+
 /* Navigation Callback for Sidebar Buttons (Fading Screen Transition) */
 static void nav_btn_cb(lv_event_t * e)
 {
@@ -448,6 +460,8 @@ void create_ventilator_main_screen(void)
     lv_obj_set_style_bg_color(pat_box, lv_color_hex(0x0B223D), 0);
     lv_obj_set_style_border_width(pat_box, 0, 0);
     lv_obj_set_style_radius(pat_box, 6, 0);
+    lv_obj_add_flag(pat_box, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(pat_box, pat_badge_click_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t * pat_lbl = lv_label_create(pat_box);
     lv_label_set_text(pat_lbl, LV_SYMBOL_DIRECTORY " Patient\n#7097ba ID: 12345678#");

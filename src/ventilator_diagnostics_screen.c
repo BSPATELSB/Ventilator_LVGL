@@ -269,6 +269,21 @@ static void back_to_home_cb(lv_event_t * e)
     create_ventilator_main_screen();
 }
 
+static void pat_badge_click_cb(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    if (clock_timer) {
+        lv_timer_delete(clock_timer);
+        clock_timer = NULL;
+    }
+    if (self_test_timer) {
+        lv_timer_delete(self_test_timer);
+        self_test_timer = NULL;
+    }
+    extern void create_ventilator_patient_screen(void);
+    create_ventilator_patient_screen();
+}
+
 /* Helper to construct custom styled gauges matching screenshot design */
 static void create_health_gauge(lv_obj_t * parent, int index, const char * title, int val, const char * unit, const char * status, lv_color_t color, const char * subtext, lv_obj_t ** out_arc, lv_obj_t ** out_val_lbl)
 {
@@ -558,6 +573,8 @@ void create_ventilator_diagnostics_screen(void)
     lv_obj_set_style_bg_color(pat_box, lv_color_hex(0x0B223D), 0);
     lv_obj_set_style_border_width(pat_box, 0, 0);
     lv_obj_set_style_radius(pat_box, 6, 0);
+    lv_obj_add_flag(pat_box, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(pat_box, pat_badge_click_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t * pat_lbl = lv_label_create(pat_box);
     lv_label_set_text(pat_lbl, LV_SYMBOL_DIRECTORY " John Doe\n#7097ba ID: 12345678 | Male | 45 yrs | 70 kg#");

@@ -71,6 +71,16 @@ static void setting_card_cb(lv_event_t * e)
         create_ventilator_calibration_screen();
     }
 }
+static void pat_badge_click_cb(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    if(clock_timer) {
+        lv_timer_delete(clock_timer);
+        clock_timer = NULL;
+    }
+    extern void create_ventilator_patient_screen(void);
+    create_ventilator_patient_screen();
+}
 
 /* Recursive helper to disable scrolling on all objects */
 extern void disable_scroll_recursive(lv_obj_t * obj);
@@ -360,6 +370,8 @@ void create_ventilator_settings_screen(void)
     lv_obj_set_style_bg_color(pat_box, lv_color_hex(0x0B223D), 0);
     lv_obj_set_style_border_width(pat_box, 0, 0);
     lv_obj_set_style_radius(pat_box, 6, 0);
+    lv_obj_add_flag(pat_box, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(pat_box, pat_badge_click_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t * pat_lbl = lv_label_create(pat_box);
     lv_label_set_text(pat_lbl, LV_SYMBOL_DIRECTORY " John Doe\n#7097ba ID: 12345678 | Male | 45 yrs | 70 kg#");
