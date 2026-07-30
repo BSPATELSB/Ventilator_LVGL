@@ -1,5 +1,6 @@
 #include "ventilator_monitoring_screen.h"
 #include "ventilator_main_screen.h"
+#include "ventilator_time_screen.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -175,9 +176,8 @@ static void waveform_timer_cb(lv_timer_t * timer)
 
     /* Update real-time clock label */
     if(lbl_clock) {
-        time_t raw_time;
+        time_t raw_time = ventilator_get_current_time(NULL);
         struct tm * time_info;
-        time(&raw_time);
         time_info = localtime(&raw_time);
 
         char clock_buf[64];

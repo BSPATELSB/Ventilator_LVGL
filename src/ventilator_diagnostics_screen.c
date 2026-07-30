@@ -1,6 +1,7 @@
 #include "ventilator_diagnostics_screen.h"
 #include "ventilator_main_screen.h"
 #include "ventilator_settings_screen.h"
+#include "ventilator_time_screen.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,9 +78,8 @@ static void clock_timer_cb(lv_timer_t * timer)
 {
     LV_UNUSED(timer);
     if (lbl_clock) {
-        time_t raw_time;
+        time_t raw_time = ventilator_get_current_time(NULL);
         struct tm * time_info;
-        time(&raw_time);
         time_info = localtime(&raw_time);
         char clock_buf[64];
         strftime(clock_buf, sizeof(clock_buf), "%d %b %Y\n%I:%M %p", time_info);

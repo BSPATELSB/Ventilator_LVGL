@@ -1,5 +1,6 @@
 #include "ventilator_settings_screen.h"
 #include "ventilator_main_screen.h"
+#include "ventilator_time_screen.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,10 +29,8 @@ static void clock_timer_cb(lv_timer_t * timer)
 {
     LV_UNUSED(timer);
     if(lbl_clock) {
-        time_t raw_time;
-        struct tm * time_info;
-        time(&raw_time);
-        time_info = localtime(&raw_time);
+        time_t raw_time = ventilator_get_current_time(NULL);
+        struct tm * time_info = localtime(&raw_time);
         char clock_buf[64];
         strftime(clock_buf, sizeof(clock_buf), "%d %b %Y\n%I:%M %p", time_info);
         lv_label_set_text(lbl_clock, clock_buf);
@@ -49,7 +48,7 @@ static void home_btn_cb(lv_event_t * e)
     create_ventilator_main_screen();
 }
 
-/* Dummy setting card click event */
+/* Setting card click event */
 static void setting_card_cb(lv_event_t * e)
 {
     const char * title = (const char *)lv_event_get_user_data(e);
@@ -70,7 +69,25 @@ static void setting_card_cb(lv_event_t * e)
         extern void create_ventilator_calibration_screen(void);
         create_ventilator_calibration_screen();
     }
+    else if(strcmp(title, "Date & Time") == 0) {
+        if(clock_timer) {
+            lv_timer_delete(clock_timer);
+            clock_timer = NULL;
+        }
+        create_ventilator_time_screen();
+    }
 }
+
+static void date_box_click_cb(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    if(clock_timer) {
+        lv_timer_delete(clock_timer);
+        clock_timer = NULL;
+    }
+    create_ventilator_time_screen();
+}
+
 static void pat_badge_click_cb(lv_event_t * e)
 {
     LV_UNUSED(e);
@@ -407,6 +424,8 @@ void create_ventilator_settings_screen(void)
     lv_obj_set_style_bg_color(date_box, lv_color_hex(0x0B223D), 0);
     lv_obj_set_style_border_width(date_box, 0, 0);
     lv_obj_set_style_radius(date_box, 6, 0);
+    lv_obj_add_flag(date_box, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(date_box, date_box_click_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t * date_icon = lv_label_create(date_box);
     lv_label_set_text(date_icon, LV_SYMBOL_LIST);
