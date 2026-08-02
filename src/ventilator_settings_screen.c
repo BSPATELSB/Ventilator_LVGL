@@ -76,6 +76,14 @@ static void setting_card_cb(lv_event_t * e)
         }
         create_ventilator_time_screen();
     }
+    else if(strcmp(title, "Network") == 0) {
+        if(clock_timer) {
+            lv_timer_delete(clock_timer);
+            clock_timer = NULL;
+        }
+        extern void create_ventilator_network_screen(void);
+        create_ventilator_network_screen();
+    }
 }
 
 static void date_box_click_cb(lv_event_t * e)
