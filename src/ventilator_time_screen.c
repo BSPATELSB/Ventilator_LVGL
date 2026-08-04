@@ -1,6 +1,7 @@
 #include "ventilator_time_screen.h"
 #include "ventilator_settings_screen.h"
 #include "ventilator_main_screen.h"
+#include "battery_detect.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +36,7 @@ time_t ventilator_get_current_time(time_t * timer)
 /* Static references for UI components */
 static lv_timer_t * clock_timer = NULL;
 static lv_obj_t * lbl_clock = NULL;
+static lv_obj_t * bat_lbl = NULL;
 static lv_obj_t * lbl_live_preview = NULL;
 static lv_obj_t * lbl_day_of_week = NULL;
 static lv_obj_t * toast_banner = NULL;
@@ -130,6 +132,9 @@ static void clock_timer_cb(lv_timer_t * timer)
         char clock_buf[64];
         strftime(clock_buf, sizeof(clock_buf), "%d %b %Y\n%I:%M %p", time_info);
         lv_label_set_text(lbl_clock, clock_buf);
+    }
+    if(bat_lbl) {
+        battery_update_label(bat_lbl);
     }
 }
 
@@ -617,10 +622,9 @@ void create_ventilator_time_screen(void)
     lv_obj_set_style_bg_opa(right_hdr, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(right_hdr, 0, 0);
 
-    lv_obj_t * bat_lbl = lv_label_create(right_hdr);
-    lv_label_set_text(bat_lbl, LV_SYMBOL_BATTERY_FULL " 100%");
+    bat_lbl = lv_label_create(right_hdr);
+    battery_update_label(bat_lbl);
     lv_obj_set_style_text_font(bat_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(bat_lbl, COLOR_ACCENT_GREEN, 0);
     lv_obj_align(bat_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     /* ==================================================================== */

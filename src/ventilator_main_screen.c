@@ -1,5 +1,6 @@
 #include "ventilator_main_screen.h"
 #include "ventilator_time_screen.h"
+#include "battery_detect.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +50,7 @@ static lv_obj_t * lbl_val_o2 = NULL;
 static lv_obj_t * lbl_val_spo2 = NULL;
 static lv_obj_t * lbl_val_pulse = NULL;
 static lv_obj_t * lbl_clock = NULL;
+static lv_obj_t * bat_lbl = NULL;
 
 /* Forward declarations for screen callbacks */
 static void back_to_main_cb(lv_event_t * e);
@@ -176,6 +178,10 @@ static void waveform_timer_cb(lv_timer_t * timer)
         if(strcmp(lv_label_get_text(lbl_clock), clock_buf) != 0) {
             lv_label_set_text(lbl_clock, clock_buf);
         }
+    }
+
+    if(bat_lbl) {
+        battery_update_label(bat_lbl);
     }
 
     prev_t = t;
@@ -497,10 +503,9 @@ void create_ventilator_main_screen(void)
     lv_obj_set_style_bg_opa(right_hdr, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(right_hdr, 0, 0);
 
-    lv_obj_t * bat_lbl = lv_label_create(right_hdr);
-    lv_label_set_text(bat_lbl, LV_SYMBOL_BATTERY_FULL " 100%");
+    bat_lbl = lv_label_create(right_hdr);
+    battery_update_label(bat_lbl);
     lv_obj_set_style_text_font(bat_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(bat_lbl, COLOR_ACCENT_GREEN, 0);
     lv_obj_align(bat_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     lbl_clock = lv_label_create(right_hdr);

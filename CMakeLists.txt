@@ -406,7 +406,7 @@ target_include_directories(lvgl_linux PUBLIC
 # Link LVGL with external dependencies - Modern CMake/CMP0079 allows this
 target_link_libraries(lvgl PUBLIC ${PKG_CONFIG_LIB} m pthread rt dl)
 
-add_executable(ventilator_app src/main.c src/ventilator_ui.c src/ventilator_main_screen.c src/ventilator_monitoring_screen.c src/ventilator_settings_screen.c src/ventilator_diagnostics_screen.c src/ventilator_calibration_screen.c src/ventilator_patient_screen.c src/ventilator_time_screen.c src/ventilator_network_screen.c src/usb_detect.c src/patient_data.c src/custom_keyboard.c)
+add_executable(ventilator_app src/main.c src/ventilator_ui.c src/ventilator_main_screen.c src/ventilator_monitoring_screen.c src/ventilator_settings_screen.c src/ventilator_diagnostics_screen.c src/ventilator_calibration_screen.c src/ventilator_patient_screen.c src/ventilator_time_screen.c src/ventilator_network_screen.c src/usb_detect.c src/battery_detect.c src/patient_data.c src/custom_keyboard.c)
 
 # Repeat lvgl_linux to resolve circular dependency with lvgl
 target_link_libraries(ventilator_app lvgl_linux lvgl lvgl_linux)
