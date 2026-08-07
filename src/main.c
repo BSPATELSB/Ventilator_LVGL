@@ -31,6 +31,8 @@
 #include "src/lib/driver_backends.h"
 #include "src/lib/simulator_util.h"
 #include "src/lib/simulator_settings.h"
+#include "brightness_control.h"
+#include "theme_manager.h"
 
 /* Internal functions */
 static void configure_simulator(int argc, char ** argv);
@@ -184,6 +186,12 @@ int main(int argc, char ** argv)
         die("Failed to initialize evdev");
     }
 #endif
+
+    /* Initialize dynamic theme manager and load active color palette */
+    theme_manager_init();
+
+    /* Initialize hardware and visual brightness control backend */
+    brightness_control_init();
 
     /* Screen 1: Boot Screen (transitions automatically to main dashboard when boot completes) */
     create_ventilator_boot_screen();

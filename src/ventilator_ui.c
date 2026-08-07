@@ -1,24 +1,25 @@
 #include "ventilator_ui.h"
 #include "ventilator_main_screen.h"
 #include "usb_detect.h"
+#include "theme_manager.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
 
-/* Color Definitions matching the screenshot */
-#define COLOR_BG_DARK           lv_color_hex(0x030712)
-#define COLOR_AURA_GLOW         lv_color_hex(0x072A52)
-#define COLOR_BADGE_BG          lv_color_hex(0x071F3B)
-#define COLOR_CYAN_ACCENT       lv_color_hex(0x00A8FF)
-#define COLOR_CYAN_BRIGHT       lv_color_hex(0x00C2FF)
-#define COLOR_TEXT_WHITE        lv_color_hex(0xFFFFFF)
-#define COLOR_TEXT_SUBTITLE     lv_color_hex(0x3892D6)
-#define COLOR_TEXT_TAGLINE      lv_color_hex(0x3072A3)
-#define COLOR_TEXT_MUTED        lv_color_hex(0x4A9FD9)
-#define COLOR_CARD_BG           lv_color_hex(0x05162E)
-#define COLOR_CARD_BORDER       lv_color_hex(0x10345E)
-#define COLOR_BAR_BG            lv_color_hex(0x071D38)
+/* Color Definitions matching dynamic theme palette */
+#define COLOR_BG_DARK           (theme_get_palette()->bg)
+#define COLOR_AURA_GLOW         (theme_get_palette()->card_bg)
+#define COLOR_BADGE_BG          (theme_get_palette()->panel_hdr)
+#define COLOR_CYAN_ACCENT       (theme_get_palette()->accent_blue)
+#define COLOR_CYAN_BRIGHT       (theme_get_palette()->accent_blue)
+#define COLOR_TEXT_WHITE        (theme_get_palette()->text_main)
+#define COLOR_TEXT_SUBTITLE     (theme_get_palette()->text_muted)
+#define COLOR_TEXT_TAGLINE      (theme_get_palette()->text_muted)
+#define COLOR_TEXT_MUTED        (theme_get_palette()->text_muted)
+#define COLOR_CARD_BG           (theme_get_palette()->card_bg)
+#define COLOR_CARD_BORDER       (theme_get_palette()->card_border)
+#define COLOR_BAR_BG            (theme_get_palette()->btn_bg)
 
 /* UI References for Animation */
 static lv_obj_t * boot_arc = NULL;

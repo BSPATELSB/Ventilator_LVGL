@@ -1,7 +1,9 @@
 #include "ventilator_settings_screen.h"
 #include "ventilator_main_screen.h"
 #include "ventilator_time_screen.h"
+#include "ventilator_display_screen.h"
 #include "battery_detect.h"
+#include "theme_manager.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,17 +11,17 @@
 #include <time.h>
 
 /* Colors matching reference UI screenshot */
-#define COLOR_DASHBOARD_BG      lv_color_hex(0x040B16)
-#define COLOR_CARD_BG           lv_color_hex(0x09182B)
-#define COLOR_CARD_BORDER       lv_color_hex(0x132C4A)
-#define COLOR_ACCENT_BLUE       lv_color_hex(0x00A8FF)
-#define COLOR_ACCENT_GREEN      lv_color_hex(0x00E676)
-#define COLOR_ACCENT_YELLOW     lv_color_hex(0xFFD600)
-#define COLOR_ACCENT_RED        lv_color_hex(0xD50000)
-#define COLOR_TEXT_MAIN         lv_color_hex(0xFFFFFF)
-#define COLOR_TEXT_MUTED        lv_color_hex(0x7097BA)
-#define COLOR_BTN_NAV_BG        lv_color_hex(0x091D36)
-#define COLOR_BTN_NAV_ACTIVE    lv_color_hex(0x0A3B73)
+#define COLOR_DASHBOARD_BG      (theme_get_palette()->bg)
+#define COLOR_CARD_BG           (theme_get_palette()->card_bg)
+#define COLOR_CARD_BORDER       (theme_get_palette()->card_border)
+#define COLOR_ACCENT_BLUE       (theme_get_palette()->accent_blue)
+#define COLOR_ACCENT_GREEN      (theme_get_palette()->accent_green)
+#define COLOR_ACCENT_YELLOW     (theme_get_palette()->accent_yellow)
+#define COLOR_ACCENT_RED        (theme_get_palette()->accent_red)
+#define COLOR_TEXT_MAIN         (theme_get_palette()->text_main)
+#define COLOR_TEXT_MUTED        (theme_get_palette()->text_muted)
+#define COLOR_BTN_NAV_BG        (theme_get_palette()->btn_bg)
+#define COLOR_BTN_NAV_ACTIVE    (theme_get_palette()->btn_active)
 
 /* Static references */
 static lv_timer_t * clock_timer = NULL;
@@ -58,7 +60,14 @@ static void setting_card_cb(lv_event_t * e)
 {
     const char * title = (const char *)lv_event_get_user_data(e);
     LV_LOG_USER("Clicked system setting: %s\n", title);
-    if(strcmp(title, "Diagnosis") == 0) {
+    if(strcmp(title, "Display") == 0 || strcmp(title, "Brightness") == 0) {
+        if(clock_timer) {
+            lv_timer_delete(clock_timer);
+            clock_timer = NULL;
+        }
+        create_ventilator_display_screen();
+    }
+    else if(strcmp(title, "Diagnosis") == 0) {
         if(clock_timer) {
             lv_timer_delete(clock_timer);
             clock_timer = NULL;
