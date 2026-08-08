@@ -1,0 +1,22 @@
+{
+  "firmware_version": "v3.8.4-Build20260808",
+  "application_version": "v2.6.0-Release",
+  "application_name": "LifeLine Medical Ventilator UI",
+  "developer_name": "LifeLine Embedded Systems R&D Team",
+  "technology": "C99 / LVGL 9.2 (Light and Versatile Graphics Library) / Linux Framebuffer & DRM & SDL / CMake",
+  "build_date": "2026-08-08",
+  "hardware_revision": "Rev 4.2-B",
+  "serial_number": "LLV-98472-X2026",
+  "features": [
+    "Real-Time Patient Ventilation Monitoring & High-Precision Waveforms (P-t, F-t, V-t)",
+    "Comprehensive Ventilation Modes (VCV, PCV, SIMV, CPAP/PSV, BiPAP, PRVC)",
+    "Smart Alarm System with Visual & Audible Critical Alerts",
+    "Patient Profile Management & Dynamic Ideal Body Weight (IBW) Tidal Volume Calculator",
+    "Wi-Fi & Ethernet Network Interface & Cloud Telemetry Support",
+    "Sensor & Valve Calibration System (O2, Pressure, Flow, Zero Calibration)",
+    "Hardware Diagnostics & Live Communication Bus Status Monitor",
+    "Multi-Theme Support (Dark Medical, Light Mode, High-Contrast Night Vision)",
+    "Dynamic Screen Brightness & Power Management",
+    "USB Firmware Upgrade & Exportable Patient Log Architecture"
+  ]
+}

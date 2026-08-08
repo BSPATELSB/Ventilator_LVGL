@@ -55,6 +55,8 @@ static void home_btn_cb(lv_event_t * e)
     create_ventilator_main_screen();
 }
 
+#include "ventilator_device_info_screen.h"
+
 /* Setting card click event */
 static void setting_card_cb(lv_event_t * e)
 {
@@ -97,6 +99,13 @@ static void setting_card_cb(lv_event_t * e)
         }
         extern void create_ventilator_network_screen(void);
         create_ventilator_network_screen();
+    }
+    else if(strcmp(title, "About Device") == 0) {
+        if(clock_timer) {
+            lv_timer_delete(clock_timer);
+            clock_timer = NULL;
+        }
+        create_ventilator_device_info_screen();
     }
 }
 
