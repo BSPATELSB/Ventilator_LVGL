@@ -4,6 +4,7 @@
 #include "battery_detect.h"
 #include "theme_manager.h"
 #include "lvgl/lvgl.h"
+#include "lvgl/src/lvgl_private.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,60 +96,181 @@ static void populate_loops_data(void)
     }
 }
 
+typedef enum {
+    WAVE_TYPE_PRESSURE = 0,
+    WAVE_TYPE_FLOW = 1,
+    WAVE_TYPE_VOLUME = 2
+} wave_type_t;
+
+static void custom_chart_draw_cb(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if(code != LV_EVENT_DRAW_MAIN_BEGIN) return;
+
+    lv_obj_t * obj = lv_event_get_target(e);
+    lv_layer_t * layer = lv_event_get_layer(e);
+    uintptr_t type_val = (uintptr_t)lv_event_get_user_data(e);
+    wave_type_t wave_type = (wave_type_t)type_val;
+
+    lv_area_t coords;
+    lv_obj_get_coords(obj, &coords);
+
+    int32_t border_w = lv_obj_get_style_border_width(obj, LV_PART_MAIN);
+    int32_t pad_l = lv_obj_get_style_pad_left(obj, LV_PART_MAIN) + border_w;
+    int32_t pad_t = lv_obj_get_style_pad_top(obj, LV_PART_MAIN) + border_w;
+    int32_t w = lv_obj_get_content_width(obj);
+    int32_t h = lv_obj_get_content_height(obj);
+
+    int32_t x_ofs = coords.x1 + pad_l;
+    int32_t y_ofs = coords.y1 + pad_t;
+
+    lv_chart_t * chart = (lv_chart_t *)obj;
+    lv_chart_series_t * ser = lv_chart_get_series_next(obj, NULL);
+    if(!ser) return;
+
+    uint32_t point_cnt = chart->point_cnt;
+    if(point_cnt < 2) return;
+
+    int32_t * y_points = lv_chart_get_y_array(obj, ser);
+    if(!y_points) return;
+
+    int32_t start_point = (chart->update_mode == LV_CHART_UPDATE_MODE_SHIFT) ? ser->start_point : 0;
+    int32_t min_v = chart->ymin[ser->y_axis_sec];
+    int32_t max_v = chart->ymax[ser->y_axis_sec];
+
+    /* 1. Draw Grid Lines matching reference graph screenshot */
+    lv_draw_line_dsc_t grid_dsc;
+    lv_draw_line_dsc_init(&grid_dsc);
+    grid_dsc.color = lv_color_hex(0x162438);
+    grid_dsc.width = 1;
+    grid_dsc.opa = LV_OPA_50;
+
+    int v_lines = 16;
+    for(int i = 0; i <= v_lines; i++) {
+        int32_t gx = x_ofs + (w * i) / v_lines;
+        grid_dsc.p1.x = gx;
+        grid_dsc.p1.y = y_ofs;
+        grid_dsc.p2.x = gx;
+        grid_dsc.p2.y = y_ofs + h;
+        lv_draw_line(layer, &grid_dsc);
+    }
+
+    int h_lines = 4;
+    for(int i = 0; i <= h_lines; i++) {
+        int32_t gy = y_ofs + (h * i) / h_lines;
+        grid_dsc.p1.x = x_ofs;
+        grid_dsc.p1.y = gy;
+        grid_dsc.p2.x = x_ofs + w;
+        grid_dsc.p2.y = gy;
+        lv_draw_line(layer, &grid_dsc);
+    }
+
+    /* 2. Draw Translucent Area Fill Under/Over Baseline */
+    lv_draw_line_dsc_t fill_dsc;
+    lv_draw_line_dsc_init(&fill_dsc);
+
+    int32_t step_w = (w / (point_cnt - 1)) + 1;
+    if(step_w < 2) step_w = 2;
+    fill_dsc.width = step_w;
+
+    lv_color_t fill_color;
+    int32_t y_base = y_ofs + h;
+
+    if(wave_type == WAVE_TYPE_PRESSURE) {
+        fill_color = lv_color_hex(0x005b7f); // Cyan fill
+        fill_dsc.opa = LV_OPA_40;
+        y_base = y_ofs + h;
+    } else if(wave_type == WAVE_TYPE_FLOW) {
+        fill_color = lv_color_hex(0x7f1818); // Dark Red fill
+        fill_dsc.opa = LV_OPA_40;
+        y_base = (int32_t)lv_map(0, min_v, max_v, y_ofs + h, y_ofs);
+    } else {
+        fill_color = lv_color_hex(0x755600); // Yellow/Amber fill
+        fill_dsc.opa = LV_OPA_40;
+        y_base = y_ofs + h;
+    }
+    fill_dsc.color = fill_color;
+
+    for(uint32_t i = 0; i < point_cnt; i++) {
+        int32_t p_act = (start_point + i) % point_cnt;
+        int32_t val = y_points[p_act];
+        if(val == LV_CHART_POINT_NONE) continue;
+
+        int32_t px = x_ofs + (int32_t)((w * i) / (point_cnt - 1));
+        int32_t py = (int32_t)lv_map(val, min_v, max_v, y_ofs + h, y_ofs);
+
+        fill_dsc.p1.x = px;
+        fill_dsc.p1.y = y_base;
+        fill_dsc.p2.x = px;
+        fill_dsc.p2.y = py;
+
+        lv_draw_line(layer, &fill_dsc);
+    }
+}
+
 /* Generate exact clinical ventilator wave points matching the target screenshot */
 static void waveform_timer_cb(lv_timer_t * timer)
 {
     LV_UNUSED(timer);
 
-    wave_phase_counter += 0.025f;
+    wave_phase_counter += (1.0f / 30.0f);
     if(wave_phase_counter >= 1.0f) wave_phase_counter -= 1.0f;
 
     float t = wave_phase_counter;
-    float p_val = 10.0f;
+    float p_val = 8.0f;
     float f_val = 0.0f;
-    float v_val = 50.0f;
+    float v_val = 0.0f;
 
-    /* 1. Pressure Curve (cmH2O): Baseline 10, Plateau 38 */
-    if(t < 0.08f) {
-        float r = t / 0.08f;
-        p_val = 10.0f + 28.0f * (0.5f * (1.0f - cosf(r * M_PI)));
-    } else if(t < 0.28f) {
-        p_val = 38.0f;
-    } else if(t < 0.38f) {
-        float r = (t - 0.28f) / 0.10f;
-        p_val = 10.0f + 28.0f * (0.5f * (1.0f + cosf(r * M_PI)));
+    /* 1. Pressure Curve (cmH2O): Baseline 8, Peak 30 cmH2O */
+    if(t < 0.05f) {
+        p_val = 8.0f + 0.2f * sinf(t * 100.0f);
+    } else if(t < 0.18f) {
+        float r = (t - 0.05f) / 0.13f;
+        p_val = 8.0f + 22.0f * (0.5f * (1.0f - cosf(r * M_PI)));
+    } else if(t < 0.35f) {
+        float r = (t - 0.18f) / 0.17f;
+        p_val = 30.0f - 2.5f * sinf(r * M_PI) + 1.2f * sinf(r * 2.0f * M_PI);
+    } else if(t < 0.50f) {
+        float r = (t - 0.35f) / 0.15f;
+        p_val = 8.0f + 20.0f * expf(-4.5f * r);
     } else {
-        p_val = 10.0f;
+        p_val = 8.0f + 0.3f * sinf(t * 80.0f);
     }
 
-    /* 2. Flow Curve (L/min): Positive inspiratory peak + Negative expiratory peak */
-    if(t < 0.06f) {
-        float r = t / 0.06f;
-        f_val = 50.0f * sinf(r * M_PI / 2.0f);
-    } else if(t < 0.28f) {
-        float r = (t - 0.06f) / 0.22f;
-        f_val = 50.0f * expf(-3.0f * r);
+    /* 2. Flow Curve (L/min): Inspiratory Peak +52, Expiratory Peak -62 */
+    if(t < 0.05f) {
+        f_val = 0.0f;
+    } else if(t < 0.10f) {
+        float r = (t - 0.05f) / 0.05f;
+        f_val = 52.0f * sinf(r * M_PI / 2.0f);
+    } else if(t < 0.32f) {
+        float r = (t - 0.10f) / 0.22f;
+        f_val = 52.0f * (1.0f - 0.75f * r) * expf(-1.2f * r);
     } else if(t < 0.35f) {
         f_val = 0.0f;
-    } else if(t < 0.40f) {
-        float r = (t - 0.35f) / 0.05f;
-        f_val = -58.0f * sinf(r * M_PI / 2.0f);
-    } else if(t < 0.80f) {
-        float r = (t - 0.40f) / 0.40f;
-        f_val = -58.0f * expf(-3.5f * r);
+    } else if(t < 0.42f) {
+        float r = (t - 0.35f) / 0.07f;
+        f_val = -62.0f * sinf(r * M_PI / 2.0f);
+    } else if(t < 0.75f) {
+        float r = (t - 0.42f) / 0.33f;
+        f_val = -62.0f * expf(-3.8f * r);
     } else {
         f_val = 0.0f;
     }
 
-    /* 3. Volume Curve (mL): Baseline 50 to Peak 600 */
-    if(t < 0.28f) {
-        float r = t / 0.28f;
-        v_val = 50.0f + 550.0f * (0.5f * (1.0f - cosf(r * M_PI)));
+    /* 3. Volume Curve (mL): Baseline 0 to Peak 480 mL */
+    if(t < 0.05f) {
+        v_val = 0.0f;
+    } else if(t < 0.32f) {
+        float r = (t - 0.05f) / 0.27f;
+        v_val = 480.0f * (0.5f * (1.0f - cosf(r * M_PI)));
+    } else if(t < 0.35f) {
+        v_val = 480.0f;
     } else if(t < 0.75f) {
-        float r = (t - 0.28f) / 0.47f;
-        v_val = 50.0f + 550.0f * expf(-4.0f * r);
+        float r = (t - 0.35f) / 0.40f;
+        v_val = 480.0f * expf(-4.0f * r);
     } else {
-        v_val = 50.0f;
+        v_val = 0.0f;
     }
 
     if(chart_pressure && ser_pressure) {
@@ -379,7 +501,7 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_size(chart_pressure, 880, 92);
     lv_obj_align(chart_pressure, LV_ALIGN_TOP_LEFT, 110, 8);
     lv_chart_set_type(chart_pressure, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart_pressure, 120);
+    lv_chart_set_point_count(chart_pressure, 180);
     lv_chart_set_update_mode(chart_pressure, LV_CHART_UPDATE_MODE_SHIFT);
     lv_chart_set_axis_range(chart_pressure, LV_CHART_AXIS_PRIMARY_Y, -10, 60);
     lv_obj_set_style_bg_opa(chart_pressure, LV_OPA_TRANSP, 0);
@@ -387,19 +509,20 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_style_line_opa(chart_pressure, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_line_width(chart_pressure, 3, LV_PART_ITEMS);
     lv_obj_set_style_size(chart_pressure, 0, 0, LV_PART_INDICATOR);
-    ser_pressure = lv_chart_add_series(chart_pressure, COLOR_ACCENT_PURPLE, LV_CHART_AXIS_PRIMARY_Y);
+    ser_pressure = lv_chart_add_series(chart_pressure, COLOR_ACCENT_BLUE, LV_CHART_AXIS_PRIMARY_Y);
+    lv_obj_add_event_cb(chart_pressure, custom_chart_draw_cb, LV_EVENT_DRAW_MAIN_BEGIN, (void *)(uintptr_t)WAVE_TYPE_PRESSURE);
 
     /* Right Readout */
     lbl_val_ppeak = lv_label_create(box_p);
     lv_label_set_text(lbl_val_ppeak, "32");
     lv_obj_set_style_text_font(lbl_val_ppeak, &lv_font_montserrat_28, 0);
-    lv_obj_set_style_text_color(lbl_val_ppeak, COLOR_ACCENT_PURPLE, 0);
+    lv_obj_set_style_text_color(lbl_val_ppeak, COLOR_ACCENT_BLUE, 0);
     lv_obj_align(lbl_val_ppeak, LV_ALIGN_TOP_RIGHT, -45, 12);
 
     lv_obj_t * lbl_ppeak_sub = lv_label_create(box_p);
     lv_label_set_text(lbl_ppeak_sub, "Ppeak");
     lv_obj_set_style_text_font(lbl_ppeak_sub, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_ppeak_sub, COLOR_ACCENT_PURPLE, 0);
+    lv_obj_set_style_text_color(lbl_ppeak_sub, COLOR_ACCENT_BLUE, 0);
     lv_obj_align(lbl_ppeak_sub, LV_ALIGN_TOP_RIGHT, -40, 46);
 
     /* 2B. Flow Waveform Box */
@@ -413,7 +536,7 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_t * lbl_f_title = lv_label_create(box_f);
     lv_label_set_text(lbl_f_title, "Flow");
     lv_obj_set_style_text_font(lbl_f_title, &lv_font_montserrat_14, 0);
-    lv_obj_set_style_text_color(lbl_f_title, COLOR_ACCENT_GREEN, 0);
+    lv_obj_set_style_text_color(lbl_f_title, COLOR_ACCENT_RED, 0);
     lv_obj_align(lbl_f_title, LV_ALIGN_TOP_LEFT, 4, 6);
 
     lv_obj_t * lbl_f_unit = lv_label_create(box_f);
@@ -446,7 +569,7 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_size(chart_flow, 880, 92);
     lv_obj_align(chart_flow, LV_ALIGN_TOP_LEFT, 110, 8);
     lv_chart_set_type(chart_flow, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart_flow, 120);
+    lv_chart_set_point_count(chart_flow, 180);
     lv_chart_set_update_mode(chart_flow, LV_CHART_UPDATE_MODE_SHIFT);
     lv_chart_set_axis_range(chart_flow, LV_CHART_AXIS_PRIMARY_Y, -80, 80);
     lv_obj_set_style_bg_opa(chart_flow, LV_OPA_TRANSP, 0);
@@ -454,19 +577,20 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_style_line_opa(chart_flow, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_line_width(chart_flow, 3, LV_PART_ITEMS);
     lv_obj_set_style_size(chart_flow, 0, 0, LV_PART_INDICATOR);
-    ser_flow = lv_chart_add_series(chart_flow, COLOR_ACCENT_GREEN, LV_CHART_AXIS_PRIMARY_Y);
+    ser_flow = lv_chart_add_series(chart_flow, COLOR_ACCENT_RED, LV_CHART_AXIS_PRIMARY_Y);
+    lv_obj_add_event_cb(chart_flow, custom_chart_draw_cb, LV_EVENT_DRAW_MAIN_BEGIN, (void *)(uintptr_t)WAVE_TYPE_FLOW);
 
     /* Right Readout */
     lbl_val_pmean = lv_label_create(box_f);
     lv_label_set_text(lbl_val_pmean, "35");
     lv_obj_set_style_text_font(lbl_val_pmean, &lv_font_montserrat_28, 0);
-    lv_obj_set_style_text_color(lbl_val_pmean, COLOR_ACCENT_GREEN, 0);
+    lv_obj_set_style_text_color(lbl_val_pmean, COLOR_ACCENT_RED, 0);
     lv_obj_align(lbl_val_pmean, LV_ALIGN_TOP_RIGHT, -45, 12);
 
     lv_obj_t * lbl_pmean_sub = lv_label_create(box_f);
     lv_label_set_text(lbl_pmean_sub, "Pmean");
     lv_obj_set_style_text_font(lbl_pmean_sub, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_pmean_sub, COLOR_ACCENT_GREEN, 0);
+    lv_obj_set_style_text_color(lbl_pmean_sub, COLOR_ACCENT_RED, 0);
     lv_obj_align(lbl_pmean_sub, LV_ALIGN_TOP_RIGHT, -40, 46);
 
     /* 2C. Volume Waveform Box */
@@ -513,7 +637,7 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_size(chart_volume, 880, 92);
     lv_obj_align(chart_volume, LV_ALIGN_TOP_LEFT, 110, 8);
     lv_chart_set_type(chart_volume, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart_volume, 120);
+    lv_chart_set_point_count(chart_volume, 180);
     lv_chart_set_update_mode(chart_volume, LV_CHART_UPDATE_MODE_SHIFT);
     lv_chart_set_axis_range(chart_volume, LV_CHART_AXIS_PRIMARY_Y, 0, 800);
     lv_obj_set_style_bg_opa(chart_volume, LV_OPA_TRANSP, 0);
@@ -522,6 +646,7 @@ void create_ventilator_monitoring_screen(void)
     lv_obj_set_style_line_width(chart_volume, 3, LV_PART_ITEMS);
     lv_obj_set_style_size(chart_volume, 0, 0, LV_PART_INDICATOR);
     ser_volume = lv_chart_add_series(chart_volume, COLOR_ACCENT_YELLOW, LV_CHART_AXIS_PRIMARY_Y);
+    lv_obj_add_event_cb(chart_volume, custom_chart_draw_cb, LV_EVENT_DRAW_MAIN_BEGIN, (void *)(uintptr_t)WAVE_TYPE_VOLUME);
 
     /* Right Readout */
     lbl_val_vt = lv_label_create(box_v);
