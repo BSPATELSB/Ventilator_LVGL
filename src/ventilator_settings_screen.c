@@ -69,6 +69,14 @@ static void setting_card_cb(lv_event_t * e)
         }
         create_ventilator_display_screen();
     }
+    else if(strcmp(title, "Sound") == 0) {
+        if(clock_timer) {
+            lv_timer_delete(clock_timer);
+            clock_timer = NULL;
+        }
+        extern void create_ventilator_sound_screen(void);
+        create_ventilator_sound_screen();
+    }
     else if(strcmp(title, "Diagnosis") == 0) {
         if(clock_timer) {
             lv_timer_delete(clock_timer);

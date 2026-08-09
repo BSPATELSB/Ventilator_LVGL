@@ -3,6 +3,7 @@
 #include "ventilator_time_screen.h"
 #include "battery_detect.h"
 #include "theme_manager.h"
+#include "audio_manager.h"
 #include "lvgl/lvgl.h"
 #include "lvgl/src/lvgl_private.h"
 #include <stdio.h>
@@ -213,10 +214,18 @@ static void waveform_timer_cb(lv_timer_t * timer)
 {
     LV_UNUSED(timer);
 
+    static float prev_t_spike = 0.0f;
     wave_phase_counter += (1.0f / 30.0f);
     if(wave_phase_counter >= 1.0f) wave_phase_counter -= 1.0f;
 
     float t = wave_phase_counter;
+
+    /* Play realistic ECG beep sound when wave spike onset occurs */
+    if ((prev_t_spike < 0.05f && t >= 0.05f) || (t < prev_t_spike)) {
+        audio_play_ecg_beep();
+    }
+    prev_t_spike = t;
+
     float p_val = 8.0f;
     float f_val = 0.0f;
     float v_val = 0.0f;

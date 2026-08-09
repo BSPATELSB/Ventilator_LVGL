@@ -5,6 +5,7 @@
 #include "battery_detect.h"
 #include "brightness_control.h"
 #include "theme_manager.h"
+#include "audio_manager.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -405,8 +406,10 @@ static void sw_touch_sound_cb(lv_event_t * e)
 {
     lv_obj_t * sw = lv_event_get_target(e);
     touch_sound_enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
+    audio_set_touch_enabled(touch_sound_enabled);
     if(touch_sound_enabled) {
         show_toast_message("Touch sound & click audio feedback enabled.", false);
+        audio_play_touch_sound();
     } else {
         show_toast_message("Touch sound feedback muted.", false);
     }

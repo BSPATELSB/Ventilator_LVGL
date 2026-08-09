@@ -33,6 +33,7 @@
 #include "src/lib/simulator_settings.h"
 #include "brightness_control.h"
 #include "theme_manager.h"
+#include "audio_manager.h"
 
 /* Internal functions */
 static void configure_simulator(int argc, char ** argv);
@@ -192,6 +193,9 @@ int main(int argc, char ** argv)
 
     /* Initialize hardware and visual brightness control backend */
     brightness_control_init();
+
+    /* Initialize audio subsystem and load ECG beep sound assets */
+    audio_manager_init();
 
     /* Screen 1: Boot Screen (transitions automatically to main dashboard when boot completes) */
     create_ventilator_boot_screen();
