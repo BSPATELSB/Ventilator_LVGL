@@ -74,6 +74,9 @@ else
     echo -e "${YELLOW}Notice: .git folder not present, skipping submodule update.${NC}"
 fi
 
+#Setup Python Environment
+sudo apt install python3.10-venv
+
 # 3. Create Build Directory & Configure CMake
 echo -e "\n${YELLOW}[3/4] Configuring project with CMake...${NC}"
 mkdir -p build
