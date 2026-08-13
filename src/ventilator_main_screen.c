@@ -327,35 +327,30 @@ static lv_obj_t * create_vital_tile(lv_obj_t * parent, const char * title, const
     lv_obj_set_style_border_color(tile, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(tile, 1, 0);
     lv_obj_set_style_radius(tile, 8, 0);
-    lv_obj_set_style_pad_all(tile, 6, 0);
+    lv_obj_set_style_pad_all(tile, 8, 0);
     lv_obj_set_flex_flow(tile, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(tile, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_align(tile, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    /* Header Container (Title + Unit) */
-    lv_obj_t * head_box = lv_obj_create(tile);
-    lv_obj_set_size(head_box, width - 16, 22);
-    lv_obj_set_style_bg_opa(head_box, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(head_box, 0, 0);
-    lv_obj_set_style_pad_all(head_box, 0, 0);
-
-    lv_obj_t * lbl_t = lv_label_create(head_box);
+    /* Title */
+    lv_obj_t * lbl_t = lv_label_create(tile);
     lv_label_set_text(lbl_t, title);
-    lv_obj_set_style_text_font(lbl_t, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_t, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_t, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_t, LV_ALIGN_LEFT_MID, 0, 0);
-
-    lv_obj_t * lbl_u = lv_label_create(head_box);
-    lv_label_set_text(lbl_u, unit);
-    lv_obj_set_style_text_font(lbl_u, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(lbl_u, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_u, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_style_text_align(lbl_t, LV_TEXT_ALIGN_CENTER, 0);
 
     /* Big Value Text */
     lv_obj_t * lbl_v = lv_label_create(tile);
     lv_label_set_text(lbl_v, val_str);
-    lv_obj_set_style_text_font(lbl_v, &lv_font_montserrat_24, 0);
+    lv_obj_set_style_text_font(lbl_v, &lv_font_montserrat_32, 0);
     lv_obj_set_style_text_color(lbl_v, COLOR_TEXT_MAIN, 0);
-    lv_obj_set_style_pad_left(lbl_v, 4, 0);
+    lv_obj_set_style_text_align(lbl_v, LV_TEXT_ALIGN_CENTER, 0);
+
+    /* Unit */
+    lv_obj_t * lbl_u = lv_label_create(tile);
+    lv_label_set_text(lbl_u, unit);
+    lv_obj_set_style_text_font(lbl_u, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(lbl_u, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_align(lbl_u, LV_TEXT_ALIGN_CENTER, 0);
 
     if(out_label) {
         *out_label = lbl_v;
@@ -368,12 +363,12 @@ static lv_obj_t * create_vital_tile(lv_obj_t * parent, const char * title, const
 static void create_quick_setting_box(lv_obj_t * parent, const char * title, const char * unit, const char * val_str, const char * range_str)
 {
     lv_obj_t * box = lv_obj_create(parent);
-    lv_obj_set_size(box, 120, 140);
+    lv_obj_set_size(box, 124, 140);
     lv_obj_set_style_bg_color(box, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(box, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(box, 1, 0);
     lv_obj_set_style_radius(box, 8, 0);
-    lv_obj_set_style_pad_all(box, 4, 0);
+    lv_obj_set_style_pad_all(box, 6, 0);
     lv_obj_set_flex_flow(box, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(box, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
@@ -381,33 +376,33 @@ static void create_quick_setting_box(lv_obj_t * parent, const char * title, cons
     lv_obj_t * lbl_t = lv_label_create(box);
     lv_label_set_text_fmt(lbl_t, "%s\n#7097ba %s#", title, unit);
     lv_label_set_recolor(lbl_t, true);
-    lv_obj_set_style_text_font(lbl_t, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_t, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_t, COLOR_TEXT_MUTED, 0);
     lv_obj_set_style_text_align(lbl_t, LV_TEXT_ALIGN_CENTER, 0);
 
     /* Value + Up/Down Arrows Container */
     lv_obj_t * val_cont = lv_obj_create(box);
-    lv_obj_set_size(val_cont, 110, 42);
+    lv_obj_set_size(val_cont, 114, 42);
     lv_obj_set_style_bg_opa(val_cont, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(val_cont, 0, 0);
     lv_obj_set_style_pad_all(val_cont, 0, 0);
 
     lv_obj_t * lbl_v = lv_label_create(val_cont);
     lv_label_set_text(lbl_v, val_str);
-    lv_obj_set_style_text_font(lbl_v, &lv_font_montserrat_22, 0);
+    lv_obj_set_style_text_font(lbl_v, &lv_font_montserrat_28, 0);
     lv_obj_set_style_text_color(lbl_v, COLOR_TEXT_MAIN, 0);
     lv_obj_align(lbl_v, LV_ALIGN_LEFT_MID, 4, 0);
 
     lv_obj_t * lbl_arr = lv_label_create(val_cont);
     lv_label_set_text(lbl_arr, "^\nv");
-    lv_obj_set_style_text_font(lbl_arr, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_arr, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_arr, COLOR_ACCENT_BLUE, 0);
     lv_obj_align(lbl_arr, LV_ALIGN_RIGHT_MID, -4, 0);
 
     /* Range Subtext */
     lv_obj_t * lbl_r = lv_label_create(box);
     lv_label_set_text(lbl_r, range_str);
-    lv_obj_set_style_text_font(lbl_r, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_r, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_r, COLOR_TEXT_MUTED, 0);
 }
 
@@ -562,17 +557,17 @@ void create_ventilator_main_screen(void)
     /* 1. TOP HEADER BAR (1280 x 55)                                         */
     /* ==================================================================== */
     lv_obj_t * top_bar = lv_obj_create(scr);
-    lv_obj_set_size(top_bar, 1280, 55);
+    lv_obj_set_size(top_bar, 1280, 60);
     lv_obj_set_pos(top_bar, 0, 0);
     lv_obj_set_style_bg_color(top_bar, lv_color_hex(0x061528), 0);
     lv_obj_set_style_border_color(top_bar, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(top_bar, 1, 0);
     lv_obj_set_style_radius(top_bar, 0, 0);
-    lv_obj_set_style_pad_hor(top_bar, 12, 0);
+    lv_obj_set_style_pad_hor(top_bar, 16, 0);
 
     /* Mode Badge (Left) */
     lv_obj_t * mode_box = lv_obj_create(top_bar);
-    lv_obj_set_size(mode_box, 180, 42);
+    lv_obj_set_size(mode_box, 180, 46);
     lv_obj_align(mode_box, LV_ALIGN_LEFT_MID, 0, 0);
     lv_obj_set_style_bg_color(mode_box, lv_color_hex(0x0B223D), 0);
     lv_obj_set_style_border_width(mode_box, 0, 0);
@@ -581,20 +576,20 @@ void create_ventilator_main_screen(void)
 
     lv_obj_t * mode_title = lv_label_create(mode_box);
     lv_label_set_text(mode_title, "VC-A/C");
-    lv_obj_set_style_text_font(mode_title, &lv_font_montserrat_18, 0);
+    lv_obj_set_style_text_font(mode_title, &lv_font_montserrat_22, 0);
     lv_obj_set_style_text_color(mode_title, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(mode_title, LV_ALIGN_LEFT_MID, 6, -6);
+    lv_obj_align(mode_title, LV_ALIGN_LEFT_MID, 8, -8);
 
     lv_obj_t * mode_sub = lv_label_create(mode_box);
     lv_label_set_text(mode_sub, "Adult");
-    lv_obj_set_style_text_font(mode_sub, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(mode_sub, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(mode_sub, COLOR_ACCENT_BLUE, 0);
-    lv_obj_align(mode_sub, LV_ALIGN_LEFT_MID, 6, 10);
+    lv_obj_align(mode_sub, LV_ALIGN_LEFT_MID, 8, 12);
 
     /* Patient ID Badge */
     lv_obj_t * pat_box = lv_obj_create(top_bar);
-    lv_obj_set_size(pat_box, 140, 42);
-    lv_obj_align(pat_box, LV_ALIGN_LEFT_MID, 190, 0);
+    lv_obj_set_size(pat_box, 150, 46);
+    lv_obj_align(pat_box, LV_ALIGN_LEFT_MID, 195, 0);
     lv_obj_set_style_bg_color(pat_box, lv_color_hex(0x0B223D), 0);
     lv_obj_set_style_border_width(pat_box, 0, 0);
     lv_obj_set_style_radius(pat_box, 6, 0);
@@ -604,62 +599,62 @@ void create_ventilator_main_screen(void)
     lv_obj_t * pat_lbl = lv_label_create(pat_box);
     lv_label_set_text(pat_lbl, LV_SYMBOL_DIRECTORY " Patient\n#7097ba ID: 12345678#");
     lv_label_set_recolor(pat_lbl, true);
-    lv_obj_set_style_text_font(pat_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(pat_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(pat_lbl, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(pat_lbl, LV_ALIGN_LEFT_MID, 4, 0);
+    lv_obj_align(pat_lbl, LV_ALIGN_LEFT_MID, 6, 0);
 
     /* Alarm Banner (Center) */
     lv_obj_t * alarm_box = lv_obj_create(top_bar);
-    lv_obj_set_size(alarm_box, 520, 42);
-    lv_obj_align(alarm_box, LV_ALIGN_CENTER, -40, 0);
+    lv_obj_set_size(alarm_box, 520, 46);
+    lv_obj_align(alarm_box, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_bg_color(alarm_box, COLOR_ACCENT_RED, 0);
     lv_obj_set_style_border_width(alarm_box, 0, 0);
     lv_obj_set_style_radius(alarm_box, 6, 0);
 
     lv_obj_t * alarm_lbl = lv_label_create(alarm_box);
     lv_label_set_text(alarm_lbl, LV_SYMBOL_BELL "  HIGH PRESSURE ALARM\n   Ppeak above limit");
-    lv_obj_set_style_text_font(alarm_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(alarm_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(alarm_lbl, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(alarm_lbl, LV_ALIGN_LEFT_MID, 10, 0);
+    lv_obj_align(alarm_lbl, LV_ALIGN_LEFT_MID, 12, 0);
 
     lv_obj_t * alarm_time = lv_label_create(alarm_box);
     lv_label_set_text(alarm_time, "10:24  >");
-    lv_obj_set_style_text_font(alarm_time, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(alarm_time, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(alarm_time, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(alarm_time, LV_ALIGN_RIGHT_MID, -10, 0);
+    lv_obj_align(alarm_time, LV_ALIGN_RIGHT_MID, -12, 0);
 
     /* Battery, Date & Settings (Right) */
     lv_obj_t * right_hdr = lv_obj_create(top_bar);
-    lv_obj_set_size(right_hdr, 280, 42);
+    lv_obj_set_size(right_hdr, 280, 46);
     lv_obj_align(right_hdr, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_set_style_bg_opa(right_hdr, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(right_hdr, 0, 0);
 
     bat_lbl = lv_label_create(right_hdr);
     battery_update_label(bat_lbl);
-    lv_obj_set_style_text_font(bat_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(bat_lbl, &lv_font_montserrat_14, 0);
     lv_obj_align(bat_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     lbl_clock = lv_label_create(right_hdr);
     lv_label_set_text(lbl_clock, "May 20, 2024\n10:24 AM");
-    lv_obj_set_style_text_font(lbl_clock, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_clock, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_clock, COLOR_TEXT_MUTED, 0);
     lv_obj_align(lbl_clock, LV_ALIGN_CENTER, 20, 0);
 
     lv_obj_t * set_icon = lv_label_create(right_hdr);
     lv_label_set_text(set_icon, LV_SYMBOL_SETTINGS);
-    lv_obj_set_style_text_font(set_icon, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_font(set_icon, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(set_icon, COLOR_TEXT_MUTED, 0);
     lv_obj_align(set_icon, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_add_flag(set_icon, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(set_icon, goto_settings_cb, LV_EVENT_CLICKED, NULL);
 
     /* ==================================================================== */
-    /* 2. LEFT PANEL - PATIENT VITAL READOUTS (300 x 675)                    */
+    /* 2. LEFT PANEL - PATIENT VITAL READOUTS (300 x 665)                    */
     /* ==================================================================== */
     lv_obj_t * left_panel = lv_obj_create(scr);
-    lv_obj_set_size(left_panel, 300, 675);
-    lv_obj_set_pos(left_panel, 10, 60);
+    lv_obj_set_size(left_panel, 300, 665);
+    lv_obj_set_pos(left_panel, 10, 70);
     lv_obj_set_style_bg_color(left_panel, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(left_panel, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(left_panel, 1, 0);
@@ -668,7 +663,7 @@ void create_ventilator_main_screen(void)
 
     /* Main Paw Card */
     lv_obj_t * paw_card = lv_obj_create(left_panel);
-    lv_obj_set_size(paw_card, 280, 160);
+    lv_obj_set_size(paw_card, 280, 150);
     lv_obj_set_style_bg_color(paw_card, lv_color_hex(0x061A33), 0);
     lv_obj_set_style_border_color(paw_card, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(paw_card, 1, 0);
@@ -678,14 +673,14 @@ void create_ventilator_main_screen(void)
     lv_obj_t * paw_t = lv_label_create(paw_card);
     lv_label_set_text(paw_t, "Paw\n#7097ba cmH2O#");
     lv_label_set_recolor(paw_t, true);
-    lv_obj_set_style_text_font(paw_t, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(paw_t, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(paw_t, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(paw_t, LV_ALIGN_TOP_LEFT, 6, 4);
+    lv_obj_align(paw_t, LV_ALIGN_TOP_LEFT, 8, 8);
 
     /* Pressure Bar Scale */
     bar_paw = lv_bar_create(paw_card);
-    lv_obj_set_size(bar_paw, 10, 100);
-    lv_obj_align(bar_paw, LV_ALIGN_BOTTOM_LEFT, 12, -8);
+    lv_obj_set_size(bar_paw, 12, 100);
+    lv_obj_align(bar_paw, LV_ALIGN_BOTTOM_LEFT, 16, -10);
     lv_bar_set_range(bar_paw, 0, 60);
     lv_bar_set_value(bar_paw, 24, LV_ANIM_OFF);
     lv_obj_set_style_bg_color(bar_paw, lv_color_hex(0x0C2A4A), LV_PART_MAIN);
@@ -696,56 +691,41 @@ void create_ventilator_main_screen(void)
     lv_label_set_text(lbl_val_paw, "24");
     lv_obj_set_style_text_font(lbl_val_paw, &lv_font_montserrat_48, 0);
     lv_obj_set_style_text_color(lbl_val_paw, COLOR_TEXT_MAIN, 0);
-    lv_obj_align(lbl_val_paw, LV_ALIGN_CENTER, 35, -10);
+    lv_obj_align(lbl_val_paw, LV_ALIGN_CENTER, 35, -12);
 
     lv_obj_t * paw_unit = lv_label_create(paw_card);
     lv_label_set_text(paw_unit, "cmH2O");
-    lv_obj_set_style_text_font(paw_unit, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(paw_unit, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(paw_unit, COLOR_ACCENT_BLUE, 0);
-    lv_obj_align(paw_unit, LV_ALIGN_CENTER, 35, 25);
+    lv_obj_align(paw_unit, LV_ALIGN_CENTER, 35, 28);
 
     /* Vital Readout Tiles Matrix */
     lv_obj_t * grid_cont = lv_obj_create(left_panel);
-    lv_obj_set_size(grid_cont, 284, 485);
-    lv_obj_align(grid_cont, LV_ALIGN_TOP_MID, 0, 168);
+    lv_obj_set_size(grid_cont, 284, 489);
+    lv_obj_align(grid_cont, LV_ALIGN_TOP_MID, 0, 160);
     lv_obj_set_style_bg_opa(grid_cont, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(grid_cont, 0, 0);
     lv_obj_set_style_pad_all(grid_cont, 0, 0);
+    lv_obj_set_flex_flow(grid_cont, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_style_pad_column(grid_cont, 10, 0);
+    lv_obj_set_style_pad_row(grid_cont, 10, 0);
 
-    create_vital_tile(grid_cont, "Ppeak", "cmH2O", "32", 136, 75, &lbl_val_ppeak);
-    create_vital_tile(grid_cont, "PEEP", "cmH2O", "5", 136, 75, &lbl_val_peep);
-    create_vital_tile(grid_cont, "Minute Vol", "L/min", "6.8", 136, 75, &lbl_val_mv);
-    create_vital_tile(grid_cont, "Resp Rate", "bpm", "16", 136, 75, &lbl_val_rr);
-    create_vital_tile(grid_cont, "Tidal Vol", "mL", "420", 136, 75, &lbl_val_tv);
-    create_vital_tile(grid_cont, "FiO2", "%", "40", 136, 75, &lbl_val_fio2);
-    create_vital_tile(grid_cont, "Oxygen", "%", "40", 88, 75, &lbl_val_o2);
-    create_vital_tile(grid_cont, "SpO2", "%", "98", 88, 75, &lbl_val_spo2);
-    create_vital_tile(grid_cont, "Pulse", "bpm", "78", 88, 75, &lbl_val_pulse);
-
-    /* Rearrange Grid positions */
-    lv_obj_t * children[9];
-    uint32_t cnt = lv_obj_get_child_count(grid_cont);
-    for(uint32_t i = 0; i < cnt; i++) {
-        children[i] = lv_obj_get_child(grid_cont, i);
-    }
-    if(cnt >= 9) {
-        lv_obj_set_pos(children[0], 0, 0);
-        lv_obj_set_pos(children[1], 144, 0);
-        lv_obj_set_pos(children[2], 0, 82);
-        lv_obj_set_pos(children[3], 144, 82);
-        lv_obj_set_pos(children[4], 0, 164);
-        lv_obj_set_pos(children[5], 144, 164);
-        lv_obj_set_pos(children[6], 0, 246);
-        lv_obj_set_pos(children[7], 96, 246);
-        lv_obj_set_pos(children[8], 192, 246);
-    }
+    create_vital_tile(grid_cont, "Ppeak", "cmH2O", "32", 88, 145, &lbl_val_ppeak);
+    create_vital_tile(grid_cont, "PEEP", "cmH2O", "5", 88, 145, &lbl_val_peep);
+    create_vital_tile(grid_cont, "Min Vol", "L/min", "6.8", 88, 145, &lbl_val_mv);
+    create_vital_tile(grid_cont, "Resp Rate", "bpm", "16", 88, 145, &lbl_val_rr);
+    create_vital_tile(grid_cont, "Tidal Vol", "mL", "420", 88, 145, &lbl_val_tv);
+    create_vital_tile(grid_cont, "FiO2", "%", "40", 88, 145, &lbl_val_fio2);
+    create_vital_tile(grid_cont, "Oxygen", "%", "40", 88, 145, &lbl_val_o2);
+    create_vital_tile(grid_cont, "SpO2", "%", "98", 88, 145, &lbl_val_spo2);
+    create_vital_tile(grid_cont, "Pulse", "bpm", "78", 88, 145, &lbl_val_pulse);
 
     /* ==================================================================== */
-    /* 3. CENTER WAVEFORMS SECTION (530 x 460)                              */
+    /* 3. CENTER WAVEFORMS SECTION (530 x 450)                              */
     /* ==================================================================== */
     lv_obj_t * wave_cont = lv_obj_create(scr);
-    lv_obj_set_size(wave_cont, 530, 460);
-    lv_obj_set_pos(wave_cont, 320, 60);
+    lv_obj_set_size(wave_cont, 530, 450);
+    lv_obj_set_pos(wave_cont, 320, 70);
     lv_obj_set_style_bg_color(wave_cont, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(wave_cont, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(wave_cont, 1, 0);
@@ -754,7 +734,7 @@ void create_ventilator_main_screen(void)
 
     /* --- Waveform 1: Pressure (cmH2O) --- */
     lv_obj_t * box_p = lv_obj_create(wave_cont);
-    lv_obj_set_size(box_p, 516, 140);
+    lv_obj_set_size(box_p, 516, 130);
     lv_obj_align(box_p, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_bg_opa(box_p, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(box_p, 0, 0);
@@ -764,20 +744,20 @@ void create_ventilator_main_screen(void)
     lv_obj_t * lbl_p_title = lv_label_create(box_p);
     lv_label_set_text(lbl_p_title, "Pressure\n#7097ba cmH2O#");
     lv_label_set_recolor(lbl_p_title, true);
-    lv_obj_set_style_text_font(lbl_p_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_p_title, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_p_title, COLOR_ACCENT_BLUE, 0);
     lv_obj_align(lbl_p_title, LV_ALIGN_LEFT_MID, 0, 0);
 
     /* Y-Axis Numbers */
     lv_obj_t * lbl_p_scale = lv_label_create(box_p);
     lv_label_set_text(lbl_p_scale, "60\n\n30\n\n  0\n-10");
-    lv_obj_set_style_text_font(lbl_p_scale, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_p_scale, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_p_scale, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_p_scale, LV_ALIGN_LEFT_MID, 82, 0);
+    lv_obj_align(lbl_p_scale, LV_ALIGN_LEFT_MID, 90, 0);
 
     /* Pressure Chart */
     chart_pressure = lv_chart_create(box_p);
-    lv_obj_set_size(chart_pressure, 395, 130);
+    lv_obj_set_size(chart_pressure, 395, 120);
     lv_obj_align(chart_pressure, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_chart_set_type(chart_pressure, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(chart_pressure, 90);
@@ -793,8 +773,8 @@ void create_ventilator_main_screen(void)
 
     /* --- Waveform 2: Flow (L/min) --- */
     lv_obj_t * box_f = lv_obj_create(wave_cont);
-    lv_obj_set_size(box_f, 516, 140);
-    lv_obj_align(box_f, LV_ALIGN_TOP_MID, 0, 145);
+    lv_obj_set_size(box_f, 516, 130);
+    lv_obj_align(box_f, LV_ALIGN_TOP_MID, 0, 138);
     lv_obj_set_style_bg_opa(box_f, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(box_f, 0, 0);
     lv_obj_set_style_pad_all(box_f, 0, 0);
@@ -803,20 +783,20 @@ void create_ventilator_main_screen(void)
     lv_obj_t * lbl_f_title = lv_label_create(box_f);
     lv_label_set_text(lbl_f_title, "Flow\n#7097ba L/min#");
     lv_label_set_recolor(lbl_f_title, true);
-    lv_obj_set_style_text_font(lbl_f_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_f_title, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_f_title, COLOR_ACCENT_RED, 0);
     lv_obj_align(lbl_f_title, LV_ALIGN_LEFT_MID, 0, 0);
 
     /* Y-Axis Numbers */
     lv_obj_t * lbl_f_scale = lv_label_create(box_f);
     lv_label_set_text(lbl_f_scale, "80\n\n  0\n\n-80");
-    lv_obj_set_style_text_font(lbl_f_scale, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_f_scale, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_f_scale, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_f_scale, LV_ALIGN_LEFT_MID, 82, 0);
+    lv_obj_align(lbl_f_scale, LV_ALIGN_LEFT_MID, 90, 0);
 
     /* Flow Chart */
     chart_flow = lv_chart_create(box_f);
-    lv_obj_set_size(chart_flow, 395, 130);
+    lv_obj_set_size(chart_flow, 395, 120);
     lv_obj_align(chart_flow, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_chart_set_type(chart_flow, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(chart_flow, 90);
@@ -833,7 +813,7 @@ void create_ventilator_main_screen(void)
     /* --- Waveform 3: Volume (mL) --- */
     lv_obj_t * box_v = lv_obj_create(wave_cont);
     lv_obj_set_size(box_v, 516, 160);
-    lv_obj_align(box_v, LV_ALIGN_TOP_MID, 0, 288);
+    lv_obj_align(box_v, LV_ALIGN_TOP_MID, 0, 276);
     lv_obj_set_style_bg_opa(box_v, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(box_v, 0, 0);
     lv_obj_set_style_pad_all(box_v, 0, 0);
@@ -842,20 +822,20 @@ void create_ventilator_main_screen(void)
     lv_obj_t * lbl_v_title = lv_label_create(box_v);
     lv_label_set_text(lbl_v_title, "Volume\n#7097ba mL#");
     lv_label_set_recolor(lbl_v_title, true);
-    lv_obj_set_style_text_font(lbl_v_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_v_title, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_v_title, COLOR_ACCENT_YELLOW, 0);
     lv_obj_align(lbl_v_title, LV_ALIGN_LEFT_MID, 0, -10);
 
     /* Y-Axis Numbers */
     lv_obj_t * lbl_v_scale = lv_label_create(box_v);
     lv_label_set_text(lbl_v_scale, "800\n\n400\n\n   0");
-    lv_obj_set_style_text_font(lbl_v_scale, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_v_scale, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_v_scale, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(lbl_v_scale, LV_ALIGN_LEFT_MID, 80, -10);
+    lv_obj_align(lbl_v_scale, LV_ALIGN_LEFT_MID, 90, -10);
 
     /* Volume Chart */
     chart_volume = lv_chart_create(box_v);
-    lv_obj_set_size(chart_volume, 395, 130);
+    lv_obj_set_size(chart_volume, 395, 120);
     lv_obj_align(chart_volume, LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_chart_set_type(chart_volume, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(chart_volume, 90);
@@ -872,7 +852,7 @@ void create_ventilator_main_screen(void)
     /* X-Axis Time Scale Labels at bottom */
     lv_obj_t * lbl_x_scale = lv_label_create(box_v);
     lv_label_set_text(lbl_x_scale, "0                                   10                                   20        sec");
-    lv_obj_set_style_text_font(lbl_x_scale, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_x_scale, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl_x_scale, COLOR_TEXT_MUTED, 0);
     lv_obj_align(lbl_x_scale, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 
@@ -880,11 +860,11 @@ void create_ventilator_main_screen(void)
     wave_timer = lv_timer_create(waveform_timer_cb, 50, NULL);
 
     /* ==================================================================== */
-    /* 4. LUNGS VIEWPORT - Display Images/Lungs_image.png (270 x 460)        */
+    /* 4. LUNGS VIEWPORT - Display Images/Lungs_image.png (270 x 450)        */
     /* ==================================================================== */
     lv_obj_t * lungs_vp = lv_obj_create(scr);
-    lv_obj_set_size(lungs_vp, 270, 460);
-    lv_obj_set_pos(lungs_vp, 860, 60);
+    lv_obj_set_size(lungs_vp, 270, 450);
+    lv_obj_set_pos(lungs_vp, 860, 70);
     lv_obj_set_style_bg_color(lungs_vp, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(lungs_vp, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(lungs_vp, 1, 0);
@@ -944,9 +924,9 @@ lv_anim_start(&a);
 
     lv_obj_t * q_title = lv_label_create(quick_cont);
     lv_label_set_text(q_title, "QUICK SETTINGS");
-    lv_obj_set_style_text_font(q_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(q_title, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(q_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_align(q_title, LV_ALIGN_TOP_LEFT, 6, 2);
+    lv_obj_align(q_title, LV_ALIGN_TOP_LEFT, 8, 4);
 
     lv_obj_t * q_boxes = lv_obj_create(quick_cont);
     lv_obj_set_size(q_boxes, 790, 150);
@@ -965,11 +945,11 @@ lv_anim_start(&a);
     create_quick_setting_box(q_boxes, "Flow", "L/min", "60", "20 - 100");
 
     /* ==================================================================== */
-    /* 6. RIGHT SIDEBAR NAVIGATION MENU (130 x 675)                        */
+    /* 6. RIGHT SIDEBAR NAVIGATION MENU (130 x 665)                        */
     /* ==================================================================== */
     lv_obj_t * nav_bar = lv_obj_create(scr);
-    lv_obj_set_size(nav_bar, 130, 675);
-    lv_obj_set_pos(nav_bar, 1140, 60);
+    lv_obj_set_size(nav_bar, 130, 665);
+    lv_obj_set_pos(nav_bar, 1140, 70);
     lv_obj_set_style_bg_color(nav_bar, COLOR_CARD_BG, 0);
     lv_obj_set_style_border_color(nav_bar, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(nav_bar, 1, 0);
@@ -989,7 +969,7 @@ lv_anim_start(&a);
 
     for(int i = 0; i < 6; i++) {
         lv_obj_t * btn = lv_button_create(nav_bar);
-        lv_obj_set_size(btn, 114, 98);
+        lv_obj_set_size(btn, 114, 96);
         lv_obj_set_style_bg_color(btn, (i == 0) ? COLOR_BTN_NAV_ACTIVE : COLOR_BTN_NAV_BG, 0);
         lv_obj_set_style_border_color(btn, (i == 0) ? COLOR_ACCENT_BLUE : COLOR_CARD_BORDER, 0);
         lv_obj_set_style_border_width(btn, 1, 0);
@@ -999,12 +979,12 @@ lv_anim_start(&a);
 
         lv_obj_t * icon = lv_label_create(btn);
         lv_label_set_text(icon, nav_items[i][0]);
-        lv_obj_set_style_text_font(icon, &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(icon, &lv_font_montserrat_24, 0);
         lv_obj_set_style_text_color(icon, (i == 0) ? COLOR_ACCENT_BLUE : COLOR_TEXT_MAIN, 0);
 
         lv_obj_t * txt = lv_label_create(btn);
         lv_label_set_text(txt, nav_items[i][1]);
-        lv_obj_set_style_text_font(txt, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(txt, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(txt, COLOR_TEXT_MAIN, 0);
         lv_obj_set_style_pad_top(txt, 4, 0);
 
@@ -1013,11 +993,11 @@ lv_anim_start(&a);
     }
 
     /* ==================================================================== */
-    /* 7. BOTTOM ACTION CONTROL BAR (1260 x 55)                             */
+    /* 7. BOTTOM ACTION CONTROL BAR (1260 x 48)                             */
     /* ==================================================================== */
     lv_obj_t * bot_bar = lv_obj_create(scr);
-    lv_obj_set_size(bot_bar, 1260, 55);
-    lv_obj_set_pos(bot_bar, 10, 740);
+    lv_obj_set_size(bot_bar, 1260, 48);
+    lv_obj_set_pos(bot_bar, 10, 745);
     lv_obj_set_style_bg_opa(bot_bar, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(bot_bar, 0, 0);
     lv_obj_set_style_pad_all(bot_bar, 0, 0);
@@ -1026,53 +1006,57 @@ lv_anim_start(&a);
 
     /* Action Button 1: Silence Alarm */
     lv_obj_t * btn_act1 = lv_button_create(bot_bar);
-    lv_obj_set_size(btn_act1, 230, 48);
+    lv_obj_set_size(btn_act1, 230, 44);
     lv_obj_set_style_bg_color(btn_act1, COLOR_BTN_NAV_BG, 0);
     lv_obj_set_style_border_color(btn_act1, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(btn_act1, 1, 0);
     lv_obj_t * l1 = lv_label_create(btn_act1);
     lv_label_set_text(l1, LV_SYMBOL_MUTE "  SILENCE ALARM");
+    lv_obj_set_style_text_font(l1, &lv_font_montserrat_16, 0);
     lv_obj_center(l1);
 
     /* Action Button 2: Pause Alarm */
     lv_obj_t * btn_act2 = lv_button_create(bot_bar);
-    lv_obj_set_size(btn_act2, 230, 48);
+    lv_obj_set_size(btn_act2, 230, 44);
     lv_obj_set_style_bg_color(btn_act2, COLOR_BTN_NAV_BG, 0);
     lv_obj_set_style_border_color(btn_act2, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(btn_act2, 1, 0);
     lv_obj_t * l2 = lv_label_create(btn_act2);
     lv_label_set_text(l2, LV_SYMBOL_PAUSE "  PAUSE ALARM");
+    lv_obj_set_style_text_font(l2, &lv_font_montserrat_16, 0);
     lv_obj_center(l2);
 
     /* Action Button 3: START / RESUME (Primary Green Button) */
     lv_obj_t * btn_act3 = lv_button_create(bot_bar);
-    lv_obj_set_size(btn_act3, 270, 48);
+    lv_obj_set_size(btn_act3, 270, 44);
     lv_obj_set_style_bg_color(btn_act3, lv_color_hex(0x008E3C), 0);
     lv_obj_set_style_border_color(btn_act3, COLOR_ACCENT_GREEN, 0);
     lv_obj_set_style_border_width(btn_act3, 1, 0);
     lv_obj_t * l3 = lv_label_create(btn_act3);
     lv_label_set_text(l3, LV_SYMBOL_PLAY "  START / RESUME");
-    lv_obj_set_style_text_font(l3, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(l3, &lv_font_montserrat_16, 0);
     lv_obj_center(l3);
 
     /* Action Button 4: Manual Breath */
     lv_obj_t * btn_act4 = lv_button_create(bot_bar);
-    lv_obj_set_size(btn_act4, 230, 48);
+    lv_obj_set_size(btn_act4, 230, 44);
     lv_obj_set_style_bg_color(btn_act4, COLOR_BTN_NAV_BG, 0);
     lv_obj_set_style_border_color(btn_act4, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(btn_act4, 1, 0);
     lv_obj_t * l4 = lv_label_create(btn_act4);
     lv_label_set_text(l4, LV_SYMBOL_IMAGE "  MANUAL BREATH");
+    lv_obj_set_style_text_font(l4, &lv_font_montserrat_16, 0);
     lv_obj_center(l4);
 
     /* Action Button 5: Standby */
     lv_obj_t * btn_act5 = lv_button_create(bot_bar);
-    lv_obj_set_size(btn_act5, 230, 48);
+    lv_obj_set_size(btn_act5, 230, 44);
     lv_obj_set_style_bg_color(btn_act5, COLOR_BTN_NAV_BG, 0);
     lv_obj_set_style_border_color(btn_act5, COLOR_CARD_BORDER, 0);
     lv_obj_set_style_border_width(btn_act5, 1, 0);
     lv_obj_t * l5 = lv_label_create(btn_act5);
     lv_label_set_text(l5, LV_SYMBOL_POWER "  STANDBY");
+    lv_obj_set_style_text_font(l5, &lv_font_montserrat_16, 0);
     lv_obj_center(l5);
 
     /* Disable scrolling on all elements in the main screen tree */
